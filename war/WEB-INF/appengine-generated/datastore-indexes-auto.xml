@@ -1,0 +1,10 @@
+<!-- Indices written at Mon, 28 Jan 2013 22:30:57 UTC -->
+
+<datastore-indexes>
+
+    <!-- Used 6 times in query history -->
+    <datastore-index kind="Occupant" ancestor="true" source="auto">
+        <property name="occupants_INTEGER_IDX" direction="asc"/>
+    </datastore-index>
+
+</datastore-indexes>
