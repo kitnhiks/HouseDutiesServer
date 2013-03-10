@@ -17,16 +17,16 @@ import com.sun.jersey.spi.resource.Singleton;
 @Path("/house/{houseId}/occupants")
 public class OccupantsRestService {
 
-//	@GET
-//	@Produces("application/json")
-//	/**
-//	 * Retrieve all the occupants of a given house
-//	 * @param id the id of the house
-//	 * @return the occupants
-//	 */
-//	public List<Occupant> getOccupants(@PathParam("houseId") Long houseId) {
-//		PersistenceManager pm = pmfInstance.getPersistenceManager();
-//		House house = pm.getObjectById(House.class, houseId);
-//		return house.getOccupants();
-//	}
+	@GET
+	@Produces("application/json")
+	/**
+	 * Retrieve all the occupants of a given house
+	 * @param id the id of the house
+	 * @return the occupants
+	 */
+	public List<Occupant> getOccupants(@PathParam("houseId") Long houseId) {
+		PersistenceManager pm = pmfInstance.getPersistenceManager();
+		House house = pm.getObjectById(House.class, houseId);
+		return house.getOccupants();
+	}
 }

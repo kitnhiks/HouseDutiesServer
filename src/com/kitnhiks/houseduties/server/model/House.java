@@ -95,7 +95,7 @@ public class House
 	 * Add a new occupant to the house
 	 * @param occupant the occupant to add
 	 */
-	public void addItem(Occupant newOccupant){
+	public void addOccupant(Occupant newOccupant){
 		occupants.add(newOccupant);
 	}
 	
@@ -104,17 +104,17 @@ public class House
 	 * @param id
 	 * @return the occupant
 	 */
-	public Occupant getOccupant(Long id){
-		Iterator<Occupant> it = occupants.iterator();
-		Occupant occupant;
-		while(it.hasNext()){
-			occupant = it.next();
-			if (occupant.getKey().getId() == id){
-				return occupant; 
-			}
-		}
-		return null;
-	}
+//	public Occupant getOccupant(Long id){
+//		Iterator<Occupant> it = occupants.iterator();
+//		Occupant occupant;
+//		while(it.hasNext()){
+//			occupant = it.next();
+//			if (occupant.getKey().getId() == id){
+//				return occupant; 
+//			}
+//		}
+//		return null;
+//	}
 
 	/**
 	 * Update the house with another house values

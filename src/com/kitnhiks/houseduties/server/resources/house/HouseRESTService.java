@@ -58,7 +58,7 @@ public class HouseRESTService {
 	public Response loginAccount(House house){
 
 		PersistenceManager pm = pmfInstance.getPersistenceManager();
-			Query query = pm.newQuery(House.class, "name == "+house.getName()+" && password == "+house.getPassword());
+			Query query = pm.newQuery(House.class, "name == \""+house.getName()+"\" && password == \""+house.getPassword()+"\"");
 			@SuppressWarnings("unchecked")
 			List<House> houseResults = (List<House>) query.execute();
 			int nbResults = houseResults.size();
@@ -100,12 +100,21 @@ public class HouseRESTService {
 	public Response updateHouse (House house, @PathParam("id") Long id){
 		PersistenceManager pm = pmfInstance.getPersistenceManager();
 		Transaction tx = pm.currentTransaction();
-		tx.begin();
-		House houseToUpdate = pm.getObjectById(House.class, id);
-		houseToUpdate.update(house);
-		pm.makePersistent(houseToUpdate);
-		tx.commit();
-		pm.close();
+		try {
+			tx.begin();
+			House houseToUpdate = pm.getObjectById(House.class, id);
+			houseToUpdate.update(house);
+			pm.makePersistent(houseToUpdate);
+			tx.commit();
+			pm.close();
+		}catch(Exception e){
+			return Response.status(500).build();
+		}finally {
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+			pm.close();
+		}
 		return Response.ok().build();
 	}
 
