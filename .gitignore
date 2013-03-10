@@ -1,6 +1,5 @@
-
-/gwt-unitCache
-/.gwt
-/war/WEB-INF/classes
-/war/WEB-INF/appengine-generated
-/war/WEB-INF/deploy
+/gwt-unitCache/*
+/.gwt/*
+/war/WEB-INF/classes/*
+/war/WEB-INF/appengine-generated/*
+/war/WEB-INF/deploy/*
