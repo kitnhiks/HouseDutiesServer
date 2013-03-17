@@ -20,6 +20,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import com.kitnhiks.houseduties.server.model.House;
@@ -29,6 +30,10 @@ import com.sun.jersey.spi.resource.Singleton;
 @Path("/house")
 public class HouseRESTService {
 	Logger  logger = Logger.getLogger("HouseRESTService");
+	
+	public HouseRESTService() {
+		BasicConfigurator.configure();
+	}
 
 	@POST
 	@Consumes("application/json")

@@ -113,7 +113,6 @@ public class OccupantRESTService {
 			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 			Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), id);
 			occupantToDelete = pm.getObjectById(Occupant.class, occupantKey);
-			//occupantToDelete = pm.getObjectById(Occupant.class, id);
 		}catch(Exception e){
 			return Response.status(404).build();
 		}

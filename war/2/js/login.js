@@ -23,6 +23,9 @@ var jsonContentType = "application/json; charset=utf-8";
 
 var token = "";
 var houseId = "";
+var defaultOccupantName = "Enter Occupant Name";
+var defaultOccupantPassword = "Enter Password (optional)";
+
 
 $.ajaxSetup ({
 	cache: false
@@ -52,7 +55,7 @@ stopWait = function(){
 	//TODO : Throbber ?
 }
 
-checkMandatoryFields = function(houseName, housePassword){
+checkHouseMandatoryFields = function(houseName, housePassword){
 	if (houseName.length == 0) {  
 		$("#houseName").focus();
 		log("Manque un nom");
@@ -60,6 +63,15 @@ checkMandatoryFields = function(houseName, housePassword){
 	} else if (housePassword.length == 0){
 		$("#housePassword").focus();
 		log("Manque un password");
+		return false;
+	}
+	return true;
+}
+
+checkOccupantMandatoryFields = function(occupantName){
+	if (occupantName.length == 0 || occupantName == defaultOccupantName) {  
+		$("#occupantName").focus();
+		log("Manque un nom");
 		return false;
 	}
 	return true;
@@ -122,7 +134,7 @@ getToken = function(){
 signin = function(){
 	var houseName = $("#houseName").val();
 	var housePassword = $("#housePassword").val();
-	if (checkMandatoryFields(houseName, housePassword)){
+	if (checkHouseMandatoryFields(houseName, housePassword)){
 		postJson(
 			LOGIN_URL, 
 			'{"name": "'+houseName+'", "password": "'+housePassword+'"}', 
@@ -143,7 +155,7 @@ signin = function(){
 signup = function(){
 	var houseName = $("#houseName").val();
 	var housePassword = $("#housePassword").val();
-	if (checkMandatoryFields(houseName, housePassword)){
+	if (checkHouseMandatoryFields(houseName, housePassword)){
 		postJson(
 			HOUSE_URL, 
 			'{"name": "'+houseName+'", "password": "'+housePassword+'"}', 
@@ -168,6 +180,7 @@ loadHouse = function(id){
 			houseId = id;
 			setToken(request.getResponseHeader("X-AuthKey"));
 			showHouse(data);
+			loadOccupants(id);
 		},
 		{
 			404: function() {
@@ -179,7 +192,7 @@ loadHouse = function(id){
 
 loadOccupants = function(id){
 	getJsonWithToken(
-		HOUSE_URL+id, // TODO 
+		HOUSE_URL+id+"/occupants", // TODO 
 		function(data, textStatus, request) {
 			setToken(request.getResponseHeader("X-AuthKey"));
 			showOccupants(data);
@@ -195,9 +208,9 @@ loadOccupants = function(id){
 createOccupant = function(){
 	var occupantName = $("#occupantName").val();
 	var occupantPassword = $("#occupantPassword").val();
-	if (checkMandatoryFields(occupantName)){
+	if (checkOccupantMandatoryFields(occupantName)){
 		postJson(
-			HOUSE_URL, // TODO  
+			HOUSE_URL+houseId+"/occupant", 
 			'{"name": "'+occupantName+'", "password": "'+occupantPassword+'"}', 
 			function(data, textStatus, request) {
 				setToken(request.getResponseHeader("X-AuthKey"));
@@ -227,12 +240,12 @@ var houseHomeContent =
 						'<div class="row">'+
 							'<div class="row">'+
 								'<div class="eight columns push-two">'+
-									'<input id="occupantName" type="text" value="Enter Occupant Name"/>'+
+									'<input id="occupantName" type="text" value="'+defaultOccupantName+'"/>'+
 								'</div>'+
 							'</div>'+
 							'<div class="row">'+
 								'<div class="eight columns push-two">'+
-								  '<input id="occupantPassword" type="text" value="Enter Password (optional)"/>'+
+								  '<input id="occupantPassword" type="text" value="'+defaultOccupantPassword+'"/>'+
 								'</div>'+
 							'</div>'+
 							'<div class="row">'+
@@ -240,15 +253,24 @@ var houseHomeContent =
 									'<p><a id="createOccupant" href="#" class="button">Create</a></p>'+
 								'</div>'+
 							'</div>'+
+						'</div>'+
+						'<div id="occupantsPanel" class="row">'+
 						'</div>';
-			
-			
+
+var houseOccupantsContent = 
+							'{{#occupants}}'+
+								'<div class="row">'+
+									'<div class="eight columns push-two">'+
+										'<p><a id="showOccupant[{{key.id}}]" href="#" class="button">{{name}} ({{points}})</a></p>'+
+									'</div>'+
+								'</div>'+
+							'{{/occupants}}';
 showHouse = function(house){
 	$('#header').html(Mustache.to_html(houseHomeHeader, house, partials));
-	$('#content').html(Mustache.to_html(houseHomeContent, house, partials));
+	$('#content').html(Mustache.to_html(houseHomeContent, null, partials));
 	$("#createOccupant").click(createOccupant);
 }
 
 showOccupants = function(occupants){
-	
+	$('#occupantsPanel').html(Mustache.to_html(houseOccupantsContent, {"occupants" : occupants}, partials));
 }

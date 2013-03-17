@@ -1,5 +1,6 @@
 package com.kitnhiks.houseduties.server.resources.house.occupants;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.jdo.PersistenceManager;
@@ -7,7 +8,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
 
+import com.google.appengine.api.datastore.Key;
 import com.kitnhiks.houseduties.server.model.House;
 import com.kitnhiks.houseduties.server.model.Occupant;
 import static com.kitnhiks.houseduties.server.resources.RESTService.pmfInstance;
@@ -24,9 +27,14 @@ public class OccupantsRestService {
 	 * @param id the id of the house
 	 * @return the occupants
 	 */
-	public List<Occupant> getOccupants(@PathParam("houseId") Long houseId) {
+	public Response getOccupants(@PathParam("houseId") Long houseId) {
 		PersistenceManager pm = pmfInstance.getPersistenceManager();
 		House house = pm.getObjectById(House.class, houseId);
-		return house.getOccupants();
+		ArrayList<Occupant> occupants = new ArrayList<Occupant>();
+		for(Occupant occupant : house.getOccupants()){
+			occupants.add(pm.detachCopy(pm.getObjectById(Occupant.class, occupant.getKey())));
+		}
+		
+		return Response.status(200).entity(occupants).build();
 	}
 }

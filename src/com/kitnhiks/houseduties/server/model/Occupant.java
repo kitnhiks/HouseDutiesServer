@@ -7,6 +7,9 @@ import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import com.google.appengine.api.datastore.Key;
 
 @PersistenceCapable
@@ -19,7 +22,8 @@ public class Occupant implements Serializable {
     private Key key;
 	@Persistent
 	private String name;
-	@Persistent (defaultFetchGroup="false")
+	@Persistent (defaultFetchGroup = "false")
+	@JsonIgnore
 	private String password;
 	@Persistent
 	private String email;
@@ -58,12 +62,14 @@ public class Occupant implements Serializable {
 	/**
 	 * @return the password
 	 */
+	@JsonIgnore
 	public String getPassword() {
 		return password;
 	}
 	/**
 	 * @param password the password to set
 	 */
+	@JsonProperty
 	public void setPassword(String password) {
 		this.password = password;
 	}

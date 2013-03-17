@@ -1,6 +1,6 @@
 package com.kitnhiks.houseduties.server.model;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.jdo.annotations.Element;
@@ -9,7 +9,11 @@ import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import com.google.appengine.api.datastore.Key;
+
 
 @PersistenceCapable
 public class House
@@ -20,6 +24,7 @@ public class House
     @Persistent
     private String name;
     @Persistent (defaultFetchGroup = "false")
+    @JsonIgnore
 	private String password;
     @Element(dependent = "true")
     private List<Occupant> occupants;
@@ -63,6 +68,7 @@ public class House
 	/**
 	 * @return the password
 	 */
+	@JsonIgnore
 	public String getPassword() {
 		return password;
 	}
@@ -71,6 +77,7 @@ public class House
 	/**
 	 * @param password the password to set
 	 */
+	@JsonProperty
 	public void setPassword(String password) {
 		this.password = password;
 	}
@@ -83,13 +90,24 @@ public class House
 		return occupants;
 	}
 
-
 	/**
 	 * @param occupants the occupants to set
 	 */
 	public void setOccupants(List<Occupant> occupants) {
 		this.occupants = occupants;
 	}
+	
+	/**
+	 * @return the occupants ids
+	 */
+//	@JsonIgnore
+//	public ArrayList<Key> getOccupantsIds() {
+//		ArrayList<Key> listIds = new ArrayList<Key>();
+//		for (Occupant occupant : occupants){
+//			listIds.add(occupant.getKey());
+//		}
+//		return listIds;
+//	}
 
 	/**
 	 * Add a new occupant to the house
@@ -98,23 +116,6 @@ public class House
 	public void addOccupant(Occupant newOccupant){
 		occupants.add(newOccupant);
 	}
-	
-	/**
-	 * Get an occupant of the house
-	 * @param id
-	 * @return the occupant
-	 */
-//	public Occupant getOccupant(Long id){
-//		Iterator<Occupant> it = occupants.iterator();
-//		Occupant occupant;
-//		while(it.hasNext()){
-//			occupant = it.next();
-//			if (occupant.getKey().getId() == id){
-//				return occupant; 
-//			}
-//		}
-//		return null;
-//	}
 
 	/**
 	 * Update the house with another house values
