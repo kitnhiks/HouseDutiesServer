@@ -23,17 +23,19 @@ var jsonContentType = "application/json; charset=utf-8";
 
 var token = "";
 var houseId = "";
-var defaultOccupantName = "Enter Occupant Name";
-var defaultOccupantPassword = "Enter Password (optional)";
-
+var inputValues = {
+	"houseName" : "Enter Name",
+	"housePassword" : "Enter Password",
+	"occupantName" : "Enter Name" ,
+	"occupantPassword" : "Enter Password (optional)",
+};
 
 $.ajaxSetup ({
 	cache: false
 });
 
 $(document).ready(function() {
-	$("#signup").click(signup);
-	$("#signin").click(signin);
+	showLogin();
 });
 
 /*****
@@ -69,12 +71,24 @@ checkHouseMandatoryFields = function(houseName, housePassword){
 }
 
 checkOccupantMandatoryFields = function(occupantName){
-	if (occupantName.length == 0 || occupantName == defaultOccupantName) {  
+	if (occupantName.length == 0 || occupantName == inputValues.occupantName) {  
 		$("#occupantName").focus();
 		log("Manque un nom");
 		return false;
 	}
 	return true;
+}
+
+clearInputField = function(){
+	if ($(this).val() == inputValues[$(this).attr('id')]){
+		$(this).val("");
+	}
+}
+
+leaveInputField = function(){
+	if ($(this).val() == ""){
+		$(this).val(inputValues[$(this).attr('id')]);
+	}
 }
 
 postJson = function(url, data, callback, statusCode, headers){
@@ -226,6 +240,7 @@ createOccupant = function(){
 	return false;
 }
 
+
 /*****
 [VIEW]
 ******/
@@ -235,17 +250,51 @@ var partials =
 				houseName : '<h1>Bienvenue dans la maison {{name}}</h1>'
 			};
 
+var loginHeader = 
+	'<div class="panel">'+
+		'<h1>House Duties</h1>'+
+	'</div>';
+		
+var loginContent =
+	'<div class="row">'+
+		'<div class="three columns mobile-one"><img src="img/houduty.png" /></div>'+
+		'<div class="nine columns mobile-three">'+
+			'<p>House Duties helps you deal with all these "little pleasures" of your daily life as a familly, a couple or a roommate.</p>'+
+		'</div>'+
+	'</div>'+
+
+	'<div class="row">'+
+		'<div class="row">'+
+			'<div class="eight columns push-two">'+
+				'<input id="houseName" class="text-within" type="text" value="'+inputValues.houseName+'"/>'+
+			'</div>'+
+		'</div>'+
+		'<div class="row">'+
+			'<div class="eight columns push-two">'+
+				'<input id="housePassword" class="text-within" type="text" value="'+inputValues.housePassword+'"/>'+
+			'</div>'+
+		'</div>'+
+		'<div class="row">'+
+			'<div class="two columns">'+
+				'<p><a id="signup" href="#" class="button">Create</a></p>'+
+			'</div>'+
+			'<div class="two columns">'+
+				'<p><a id="signin" href="#" class="button">Enter</a></p>'+
+			'</div>'+
+		'</div>'+
+	'</div>';
+			
 var houseHomeHeader = '<div class="panel">{{>houseName}}</div>';
 var houseHomeContent = 
 						'<div class="row">'+
 							'<div class="row">'+
 								'<div class="eight columns push-two">'+
-									'<input id="occupantName" type="text" value="'+defaultOccupantName+'"/>'+
+									'<input id="occupantName" class="text-within" type="text" value="'+inputValues.occupantName+'"/>'+
 								'</div>'+
 							'</div>'+
 							'<div class="row">'+
 								'<div class="eight columns push-two">'+
-								  '<input id="occupantPassword" type="text" value="'+defaultOccupantPassword+'"/>'+
+								  '<input id="occupantPassword" class="text-within" type="text" value="'+inputValues.occupantPassword+'"/>'+
 								'</div>'+
 							'</div>'+
 							'<div class="row">'+
@@ -265,12 +314,28 @@ var houseOccupantsContent =
 									'</div>'+
 								'</div>'+
 							'{{/occupants}}';
+
+showLogin = function (){
+	$('#header').html(Mustache.to_html(loginHeader, null, partials));
+	$('#content').html(Mustache.to_html(loginContent, null, partials));
+	$("#signup").click(signup);
+	$("#signin").click(signin);
+	showCommon();
+}
+							
 showHouse = function(house){
 	$('#header').html(Mustache.to_html(houseHomeHeader, house, partials));
 	$('#content').html(Mustache.to_html(houseHomeContent, null, partials));
 	$("#createOccupant").click(createOccupant);
+	showCommon();
 }
 
 showOccupants = function(occupants){
 	$('#occupantsPanel').html(Mustache.to_html(houseOccupantsContent, {"occupants" : occupants}, partials));
+	showCommon();
+}
+
+showCommon = function (){
+	$(".text-within").click(clearInputField);
+	$(".text-within").blur(leaveInputField);
 }
