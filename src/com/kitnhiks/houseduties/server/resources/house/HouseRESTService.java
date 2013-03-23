@@ -2,7 +2,6 @@ package com.kitnhiks.houseduties.server.resources.house;
 
 
 import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
-import static com.kitnhiks.houseduties.server.resources.RESTService.pmfInstance;
 import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
 
 import java.util.List;
@@ -20,20 +19,13 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
-
 import com.kitnhiks.houseduties.server.model.House;
+import com.kitnhiks.houseduties.server.resources.RESTService;
 import com.sun.jersey.spi.resource.Singleton;
 
 @Singleton
 @Path("/house")
-public class HouseRESTService {
-	Logger  logger = Logger.getLogger("HouseRESTService");
-	
-	public HouseRESTService() {
-		BasicConfigurator.configure();
-	}
+public class HouseRESTService extends RESTService{
 
 	@POST
 	@Consumes("application/json")
@@ -54,7 +46,7 @@ public class HouseRESTService {
 			return serverErrorResponse("creating the house", e);
 		}
 	}
-	
+
 	@Path("login")
 	@POST
 	@Consumes("application/json")
@@ -97,7 +89,7 @@ public class HouseRESTService {
 			House house;
 			try{
 				house = pm.detachCopy(pm.getObjectById(House.class, id));
-			
+
 			}catch(Exception e){
 				return Response.status(404).build();
 			}
@@ -160,10 +152,5 @@ public class HouseRESTService {
 		}catch (Exception e){
 			return serverErrorResponse("deleting the house", e);
 		}
-	}
-	
-	private Response serverErrorResponse(String whileMessage, Exception e){
-		logger.error("Problem while "+whileMessage + " : " + e.getMessage());
-		return Response.status(500).entity("There has been a problem while "+whileMessage+". Please try again later.").build();
 	}
 }

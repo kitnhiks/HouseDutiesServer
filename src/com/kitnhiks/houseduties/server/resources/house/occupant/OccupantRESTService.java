@@ -1,5 +1,8 @@
 package com.kitnhiks.houseduties.server.resources.house.occupant;
 
+import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
+
 import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Transaction;
@@ -14,20 +17,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.kitnhiks.houseduties.server.model.Occupant;
-import com.kitnhiks.houseduties.server.model.House;
-
-import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
-import static com.kitnhiks.houseduties.server.resources.RESTService.pmfInstance;
-import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
-
-import com.sun.jersey.spi.resource.Singleton;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
+import com.kitnhiks.houseduties.server.model.House;
+import com.kitnhiks.houseduties.server.model.Occupant;
+import com.kitnhiks.houseduties.server.resources.RESTService;
+import com.sun.jersey.spi.resource.Singleton;
 
 @Singleton
 @Path("/house/{houseId}/occupant")
-public class OccupantRESTService {
+public class OccupantRESTService extends RESTService{
+	// TODO : handle errors logging
 
 	@POST
 	@Consumes("application/json")
@@ -69,7 +69,7 @@ public class OccupantRESTService {
 			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 			Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), id);
 			occupant = pm.detachCopy(pm.getObjectById(Occupant.class, occupantKey));
-			
+
 		}catch(Exception e){
 			return Response.status(404).build();
 		}

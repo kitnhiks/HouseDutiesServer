@@ -1,7 +1,6 @@
 package com.kitnhiks.houseduties.server.resources.house.occupants;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.jdo.PersistenceManager;
 import javax.ws.rs.GET;
@@ -10,16 +9,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
-import com.google.appengine.api.datastore.Key;
 import com.kitnhiks.houseduties.server.model.House;
 import com.kitnhiks.houseduties.server.model.Occupant;
-import static com.kitnhiks.houseduties.server.resources.RESTService.pmfInstance;
+import com.kitnhiks.houseduties.server.resources.RESTService;
 import com.sun.jersey.spi.resource.Singleton;
 
 @Singleton
 @Path("/house/{houseId}/occupants")
-public class OccupantsRestService {
-
+public class OccupantsRestService extends RESTService{
+	// TODO : error logging
 	@GET
 	@Produces("application/json")
 	/**
@@ -34,7 +32,7 @@ public class OccupantsRestService {
 		for(Occupant occupant : house.getOccupants()){
 			occupants.add(pm.detachCopy(pm.getObjectById(Occupant.class, occupant.getKey())));
 		}
-		
+
 		return Response.status(200).entity(occupants).build();
 	}
 }
