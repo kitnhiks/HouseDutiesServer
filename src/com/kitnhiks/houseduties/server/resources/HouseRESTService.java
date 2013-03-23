@@ -1,4 +1,4 @@
-package com.kitnhiks.houseduties.server.resources.house;
+package com.kitnhiks.houseduties.server.resources;
 
 
 import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
@@ -20,7 +20,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 import com.kitnhiks.houseduties.server.model.House;
-import com.kitnhiks.houseduties.server.resources.RESTService;
 import com.sun.jersey.spi.resource.Singleton;
 
 @Singleton

@@ -16,7 +16,7 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jaxb-impl-2.2.4-1.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jersey-bundle-1.12.jar" sourcepath="C:/Documents and Settings/xavier.renaudin/.m2/repository/com/sun/jersey/jersey-bundle/1.12/jersey-bundle-1.12-sources.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/jettison-1.1.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/jsr311-api-1.1.1.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/jsr311-api-1.1.1.jar" sourcepath="C:/Documents and Settings/xavier.renaudin/.m2/repository/javax/ws/rs/jsr311-api/1.1.1/jsr311-api-1.1.1-sources.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/mail.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/stax-api-1.0-2.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/log4j-1.2.17.jar"/>

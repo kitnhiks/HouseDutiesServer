@@ -1,4 +1,4 @@
-package com.kitnhiks.houseduties.server.resources.house.occupants;
+package com.kitnhiks.houseduties.server.resources;
 
 import java.util.ArrayList;
 
@@ -11,12 +11,11 @@ import javax.ws.rs.core.Response;
 
 import com.kitnhiks.houseduties.server.model.House;
 import com.kitnhiks.houseduties.server.model.Occupant;
-import com.kitnhiks.houseduties.server.resources.RESTService;
 import com.sun.jersey.spi.resource.Singleton;
 
 @Singleton
 @Path("/house/{houseId}/occupants")
-public class OccupantsRestService extends RESTService{
+public class HouseOccupantsRestService extends RESTService{
 	// TODO : error logging
 	@GET
 	@Produces("application/json")

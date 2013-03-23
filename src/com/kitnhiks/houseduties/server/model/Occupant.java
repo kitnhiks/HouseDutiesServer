@@ -1,7 +1,9 @@
 package com.kitnhiks.houseduties.server.model;
 
 import java.io.Serializable;
+import java.util.List;
 
+import javax.jdo.annotations.Element;
 import javax.jdo.annotations.IdGeneratorStrategy;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -16,10 +18,10 @@ import com.google.appengine.api.datastore.Key;
 public class Occupant implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	@PrimaryKey
-    @Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
-    private Key key;
+	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
+	private Key key;
 	@Persistent
 	private String name;
 	@Persistent (defaultFetchGroup = "false")
@@ -29,12 +31,14 @@ public class Occupant implements Serializable {
 	private String email;
 	@Persistent
 	private int points = 0;
-	
+	@Element(dependent = "true")
+	private List<Task> tasks;
+
 	public Occupant() {
 
-    }
+	}
 
-	
+
 	/**
 	 * @return the key
 	 */
@@ -97,14 +101,34 @@ public class Occupant implements Serializable {
 	public void setPoints(int points) {
 		this.points = points;
 	}
-	
+
 	/**
-	 * Update from occupant
-	 * @param occupant
+	 * @return the tasks
 	 */
+	public List<Task> getTasks() {
+		return tasks;
+	}
+
+
+	/**
+	 * @param tasks the tasks to set
+	 */
+	public void setTasks(List<Task> tasks) {
+		this.tasks = tasks;
+	}
+
+	/**
+	 * Add a new occupant to the house
+	 * @param occupant the occupant to add
+	 */
+	public void addTask(Task newTask){
+		tasks.add(newTask);
+	}
+
 	public void update(Occupant occupant) {
 		setName(occupant.getName());
 		setEmail(occupant.getEmail());
 		setPoints(occupant.getPoints());
-	}	
+	}
+
 }

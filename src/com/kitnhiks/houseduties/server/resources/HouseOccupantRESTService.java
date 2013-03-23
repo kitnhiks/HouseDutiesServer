@@ -1,4 +1,4 @@
-package com.kitnhiks.houseduties.server.resources.house.occupant;
+package com.kitnhiks.houseduties.server.resources;
 
 import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
 import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
@@ -15,27 +15,20 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.kitnhiks.houseduties.server.model.House;
 import com.kitnhiks.houseduties.server.model.Occupant;
-import com.kitnhiks.houseduties.server.resources.RESTService;
 import com.sun.jersey.spi.resource.Singleton;
 
 @Singleton
 @Path("/house/{houseId}/occupant")
-public class OccupantRESTService extends RESTService{
+public class HouseOccupantRESTService extends RESTService{
 	// TODO : handle errors logging
 
 	@POST
 	@Consumes("application/json")
-	/**
-	 * Add an occupant to the house
-	 * @param itemList
-	 * @return
-	 */
 	public Response addOccupant(Occupant occupant, @PathParam("houseId") Long houseId){
 		occupant.setKey(null);
 		PersistenceManager pm = pmfInstance.getPersistenceManager();
@@ -49,12 +42,11 @@ public class OccupantRESTService extends RESTService{
 			token = generateToken(house.getName(), house.getPassword());
 			tx.commit();
 		} catch (JDOObjectNotFoundException e){
-			return Response.status(Status.NOT_FOUND).build();
+			return Response.status(404).build();
 		}finally {
 			if (tx.isActive()) {
 				tx.rollback();
 			}
-			pm.close();
 		}
 		return Response.status(200).header(AUTH_KEY_HEADER, token).entity("{\"id\":\""+occupant.getKey().getId()+"\"}").build();
 	}
@@ -79,13 +71,11 @@ public class OccupantRESTService extends RESTService{
 	@PUT
 	@Path("{id}")
 	@Consumes("application/json")
-	public Response updateItem(Occupant occupant, @PathParam("houseId") Long houseId, @PathParam("id") Long id){
+	public Response updateOccupant(Occupant occupant, @PathParam("houseId") Long houseId, @PathParam("id") Long id){
 		PersistenceManager pm = pmfInstance.getPersistenceManager();
 		Transaction tx = pm.currentTransaction();
 		try {
 			tx.begin();
-			//House house = pm.getObjectById(House.class, houseId);
-			//Occupant occupantToUpdate = house.getOccupant(id);
 			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 			Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), id);
 			Occupant occupantToUpdate = pm.detachCopy(pm.getObjectById(Occupant.class, occupantKey));
@@ -93,7 +83,7 @@ public class OccupantRESTService extends RESTService{
 			pm.makePersistent(occupantToUpdate);
 			tx.commit();
 		}catch(Exception e){
-			return Response.status(500).build();
+			return serverErrorResponse("updating the occupant "+id, e);
 		}finally {
 			if (tx.isActive()) {
 				tx.rollback();
@@ -106,7 +96,7 @@ public class OccupantRESTService extends RESTService{
 	@DELETE
 	@Path("{id}")
 	@Produces("application/json")
-	public Response deleteItem(@PathParam("houseId") Long houseId, @PathParam("id") Long id) {
+	public Response deleteOccupant(@PathParam("houseId") Long houseId, @PathParam("id") Long id) {
 		PersistenceManager pm = pmfInstance.getPersistenceManager();
 		Occupant occupantToDelete;
 		try{
