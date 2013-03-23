@@ -1,13 +1,13 @@
-<!-- Indices written at Sat, 23 Mar 2013 21:56:33 UTC -->
+<!-- Indices written at Sat, 23 Mar 2013 23:04:01 UTC -->
 
 <datastore-indexes>
 
-    <!-- Used 89 times in query history -->
+    <!-- Used 3 times in query history -->
     <datastore-index kind="Occupant" ancestor="true" source="auto">
         <property name="occupants_INTEGER_IDX" direction="asc"/>
     </datastore-index>
 
-    <!-- Used 115 times in query history -->
+    <!-- Used 3 times in query history -->
     <datastore-index kind="Task" ancestor="true" source="auto">
         <property name="tasks_INTEGER_IDX" direction="asc"/>
     </datastore-index>

@@ -8,7 +8,6 @@ import java.util.List;
 
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
-import javax.jdo.Transaction;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -29,14 +28,20 @@ public class HouseRESTService extends RESTService{
 	@POST
 	@Consumes("application/json")
 	@Produces("application/json")
-	/**
-	 * Create a house
-	 * @param house to be created
-	 * @return house id and token
-	 */
 	public Response createAccount(House house){
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
+
+			// Check house doesn't already exists
+			Query query = pm.newQuery(House.class, "name == \""+house.getName()+"\"");
+			@SuppressWarnings("unchecked")
+			List<House> houseResults = (List<House>) query.execute();
+			int nbResults = houseResults.size();
+			if (nbResults!=0){
+				return Response.status(401).build();
+			}
+
+			// Create house
 			pm.makePersistent(house);
 
 			String returnEntity = "{\"id\":\""+house.getId()+"\"}";
@@ -50,11 +55,6 @@ public class HouseRESTService extends RESTService{
 	@POST
 	@Consumes("application/json")
 	@Produces("application/json")
-	/**
-	 * Check a Login
-	 * @param login to be checked
-	 * @return house id and token
-	 */
 	public Response loginAccount(House house){
 
 		try{
@@ -79,9 +79,6 @@ public class HouseRESTService extends RESTService{
 	@Path("{id}")
 	@GET
 	@Produces("application/json")
-	/**
-	 * @return the house
-	 */
 	public Response fetchHouse(@PathParam("id") Long id) {
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
@@ -94,49 +91,28 @@ public class HouseRESTService extends RESTService{
 			}
 			return Response.status(200).entity(house).build();
 		}catch (Exception e){
-			return serverErrorResponse("retrieving the house", e);
+			return serverErrorResponse("retrieving the house "+id, e);
 		}
 	}
 
 	@PUT
 	@Path("{id}")
 	@Consumes("application/json")
-	/**
-	 * Update a house
-	 * @param house
-	 */
 	public Response updateHouse (House house, @PathParam("id") Long id){
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			Transaction tx = pm.currentTransaction();
-			try {
-				tx.begin();
-				House houseToUpdate = pm.getObjectById(House.class, id);
-				houseToUpdate.update(house);
-				pm.makePersistent(houseToUpdate);
-				tx.commit();
-				pm.close();
-			}catch(Exception e){
-				return Response.status(500).build();
-			}finally {
-				if (tx.isActive()) {
-					tx.rollback();
-				}
-				pm.close();
-			}
+			House houseToUpdate = pm.getObjectById(House.class, id);
+			houseToUpdate.update(house);
+			pm.makePersistent(houseToUpdate);
 			return Response.ok().build();
 		}catch (Exception e){
-			return serverErrorResponse("updating the house", e);
+			return serverErrorResponse("updating the house "+id, e);
 		}
 	}
 
 	@DELETE
 	@Path("{id}")
 	@Produces("application/json")
-	/**
-	 * Delete the house
-	 * @param id
-	 */
 	public Response deleteHouse(@PathParam("id") Long id) {
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
@@ -149,7 +125,7 @@ public class HouseRESTService extends RESTService{
 			pm.deletePersistent(houseToDelete);
 			return Response.ok().build();
 		}catch (Exception e){
-			return serverErrorResponse("deleting the house", e);
+			return serverErrorResponse("deleting the house "+id, e);
 		}
 	}
 }
