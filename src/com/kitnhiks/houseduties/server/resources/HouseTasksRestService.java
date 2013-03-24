@@ -1,6 +1,7 @@
 package com.kitnhiks.houseduties.server.resources;
 
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 import javax.jdo.PersistenceManager;
 import javax.ws.rs.GET;
@@ -16,6 +17,10 @@ import com.sun.jersey.spi.resource.Singleton;
 @Singleton
 @Path("/house/{houseId}/tasks")
 public class HouseTasksRestService extends RESTService{
+
+	public HouseTasksRestService(){
+		logger = Logger.getLogger(this.getClass().getName());
+	}
 
 	@GET
 	@Produces("application/json")

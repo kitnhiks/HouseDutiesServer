@@ -5,7 +5,9 @@ import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADE
 import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
 
 import java.util.List;
+import java.util.logging.Logger;
 
+import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 import javax.ws.rs.Consumes;
@@ -25,12 +27,20 @@ import com.sun.jersey.spi.resource.Singleton;
 @Path("/house")
 public class HouseRESTService extends RESTService{
 
+	public HouseRESTService(){
+		logger = Logger.getLogger(this.getClass().getName());
+	}
+
 	@POST
 	@Consumes("application/json")
 	@Produces("application/json")
 	public Response createAccount(House house){
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
+
+			if (house.getName().contains("#")){
+				return Response.status(412).build();
+			}
 
 			// Check house doesn't already exists
 			Query query = pm.newQuery(House.class, "name == \""+house.getName()+"\"");
@@ -46,6 +56,7 @@ public class HouseRESTService extends RESTService{
 
 			String returnEntity = "{\"id\":\""+house.getId()+"\"}";
 			return Response.status(200).header(AUTH_KEY_HEADER, generateToken(house.getName(), house.getPassword())).entity(returnEntity).build();
+
 		}catch (Exception e){
 			return serverErrorResponse("creating the house", e);
 		}
@@ -82,14 +93,13 @@ public class HouseRESTService extends RESTService{
 	public Response fetchHouse(@PathParam("id") Long id) {
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			House house;
-			try{
-				house = pm.detachCopy(pm.getObjectById(House.class, id));
 
-			}catch(Exception e){
-				return Response.status(404).build();
-			}
+			House house = pm.detachCopy(pm.getObjectById(House.class, id));
+
 			return Response.status(200).entity(house).build();
+
+		} catch (JDOObjectNotFoundException e){
+			return Response.status(404).build();
 		}catch (Exception e){
 			return serverErrorResponse("retrieving the house "+id, e);
 		}
@@ -102,9 +112,14 @@ public class HouseRESTService extends RESTService{
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
 			House houseToUpdate = pm.getObjectById(House.class, id);
+
 			houseToUpdate.update(house);
 			pm.makePersistent(houseToUpdate);
+
 			return Response.ok().build();
+
+		} catch (JDOObjectNotFoundException e){
+			return Response.status(404).build();
 		}catch (Exception e){
 			return serverErrorResponse("updating the house "+id, e);
 		}
@@ -116,14 +131,15 @@ public class HouseRESTService extends RESTService{
 	public Response deleteHouse(@PathParam("id") Long id) {
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			House houseToDelete;
-			try{
-				houseToDelete = pm.getObjectById(House.class, id);
-			}catch(Exception e){
-				return Response.status(404).build();
-			}
+
+			House houseToDelete = pm.getObjectById(House.class, id);
+
 			pm.deletePersistent(houseToDelete);
+
 			return Response.ok().build();
+
+		} catch (JDOObjectNotFoundException e){
+			return Response.status(404).build();
 		}catch (Exception e){
 			return serverErrorResponse("deleting the house "+id, e);
 		}

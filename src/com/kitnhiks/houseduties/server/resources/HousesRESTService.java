@@ -1,7 +1,8 @@
 package com.kitnhiks.houseduties.server.resources;
 
-import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_ADMIN;
-import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isAdmin;
+
+import java.util.logging.Logger;
 
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
@@ -18,27 +19,27 @@ import com.sun.jersey.spi.resource.Singleton;
 @Singleton
 @Path("/houses")
 public class HousesRESTService extends RESTService{
-	// TODO : error logging
+
+	public HousesRESTService(){
+		logger = Logger.getLogger(this.getClass().getName());
+	}
 
 	@GET
 	@Produces("application/json")
-	/**
-	 * @return the list of houses
-	 */
-	public Response fetchHouses(@Context HttpHeaders headers) {
-		String authKey = "";
+	public Response fetchHouses(//
+			@Context HttpHeaders headers){
 		try{
-			authKey = headers.getRequestHeader(AUTH_KEY_HEADER).get(0);
+			if (isAdmin(headers)){
+				PersistenceManager pm = RESTService.pmfInstance.getPersistenceManager();
+
+				Query query = pm.newQuery("select id from " + House.class.getName());
+
+				return Response.status(200).entity(query.execute()).build();
+			}else{
+				return Response.status(403).build();
+			}
 		}catch(Exception e){
-
+			return serverErrorResponse("retrieving houses", e);
 		}
-		if (AUTH_KEY_ADMIN.equals(authKey)){
-			PersistenceManager pm = RESTService.pmfInstance.getPersistenceManager();
-			Query query = pm.newQuery("select id from " + House.class.getName());
-
-			return Response.status(200).entity(query.execute()).build();
-		}
-		return Response.status(401).build();
 	}
-
 }

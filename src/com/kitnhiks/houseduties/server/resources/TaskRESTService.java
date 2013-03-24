@@ -1,14 +1,14 @@
 package com.kitnhiks.houseduties.server.resources;
 
 
+import java.util.logging.Logger;
+
 import javax.jdo.PersistenceManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-
-import org.apache.log4j.Logger;
 
 import com.kitnhiks.houseduties.server.model.Task;
 import com.sun.jersey.spi.resource.Singleton;
@@ -17,9 +17,8 @@ import com.sun.jersey.spi.resource.Singleton;
 @Path("/task")
 public class TaskRESTService extends RESTService{
 
-	public TaskRESTService() {
-		super();
-		logger = Logger.getLogger("TaskRESTService");
+	public TaskRESTService(){
+		logger = Logger.getLogger(this.getClass().getName());
 	}
 
 	@Path("{id}")

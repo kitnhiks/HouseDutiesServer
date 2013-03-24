@@ -2,6 +2,8 @@ package com.kitnhiks.houseduties.server.resources;
 
 import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
 
+import java.util.logging.Logger;
+
 import javax.jdo.PersistenceManager;
 import javax.jdo.Query;
 import javax.ws.rs.GET;
@@ -16,6 +18,10 @@ import com.sun.jersey.spi.resource.Singleton;
 @Singleton
 @Path("/tasks")
 public class TasksRESTService extends RESTService{
+
+	public TasksRESTService(){
+		logger = Logger.getLogger(this.getClass().getName());
+	}
 
 	@GET
 	@Produces("application/json")

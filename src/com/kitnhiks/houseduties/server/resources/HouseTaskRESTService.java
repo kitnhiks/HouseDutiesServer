@@ -4,6 +4,8 @@ package com.kitnhiks.houseduties.server.resources;
 import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
 import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
 
+import java.util.logging.Logger;
+
 import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
 import javax.jdo.Transaction;
@@ -27,94 +29,102 @@ import com.sun.jersey.spi.resource.Singleton;
 @Path("/house/{houseId}/task")
 public class HouseTaskRESTService extends RESTService{
 
+	public HouseTaskRESTService(){
+		logger = Logger.getLogger(this.getClass().getName());
+	}
+
 	@POST
 	@Consumes("application/json")
 	@Produces("application/json")
-	/**
-	 * add a task to the house
-	 * @param task to be added
-	 * @return task id and token
-	 */
 	public Response addTask(Task task, @PathParam("houseId") Long houseId){
-		task.setKey(null);
-		PersistenceManager pm = pmfInstance.getPersistenceManager();
-		Transaction tx = pm.currentTransaction();
-		String token="";
-		try {
-			tx.begin();
+		try{
+			task.setKey(null);
+			PersistenceManager pm = pmfInstance.getPersistenceManager();
 			House house = pm.getObjectById(House.class, houseId);
+
 			house.addTask(task);
 			pm.makePersistent(house);
-			token = generateToken(house.getName(), house.getPassword());
-			tx.commit();
-		} catch (JDOObjectNotFoundException e){
+
+			String token = generateToken(house.getName(), house.getPassword());
+			return Response.status(200).header(AUTH_KEY_HEADER, token).entity("{\"id\":\""+task.getKey().getId()+"\"}").build();
+
+		}catch (JDOObjectNotFoundException e){
 			return Response.status(404).build();
-		}finally {
-			if (tx.isActive()) {
-				tx.rollback();
-			}
-			pm.close();
+		}catch(Exception e){
+			return serverErrorResponse("adding task to the house "+houseId, e);
 		}
-		return Response.status(200).header(AUTH_KEY_HEADER, token).entity("{\"id\":\""+task.getKey().getId()+"\"}").build();
 	}
 
 	@GET
 	@Path("{id}")
 	@Produces("application/json")
 	public Response getTask(@PathParam("houseId") Long houseId, @PathParam("id") Long id) {
-		PersistenceManager pm = pmfInstance.getPersistenceManager();
-		Task task;
 		try{
+			PersistenceManager pm = pmfInstance.getPersistenceManager();
+			Task task;
 			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 			Key taskKey = KeyFactory.createKey(houseKey, Task.class.getSimpleName(), id);
+
 			task = pm.detachCopy(pm.getObjectById(Task.class, taskKey));
 
-		}catch(Exception e){
+			return Response.status(200).entity(task).build();
+
+		}catch (JDOObjectNotFoundException e){
 			return Response.status(404).build();
+		}catch(Exception e){
+			return serverErrorResponse("retrieving task "+id+" from house "+houseId, e);
 		}
-		return Response.status(200).entity(task).build();
 	}
 
 	@PUT
 	@Path("{id}")
 	@Consumes("application/json")
 	public Response updateTask(Task task, @PathParam("houseId") Long houseId, @PathParam("id") Long id){
-		PersistenceManager pm = pmfInstance.getPersistenceManager();
-		Transaction tx = pm.currentTransaction();
-		try {
+		Transaction tx = null;
+		try{
+			PersistenceManager pm = pmfInstance.getPersistenceManager();
+			tx = pm.currentTransaction();
 			tx.begin();
 			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 			Key taskKey = KeyFactory.createKey(houseKey, Task.class.getSimpleName(), id);
+
 			Task taskToUpdate = pm.detachCopy(pm.getObjectById(Task.class, taskKey));
 			taskToUpdate.update(task);
 			pm.makePersistent(taskToUpdate);
 			tx.commit();
+
+			return Response.ok().build();
+
+		}catch (JDOObjectNotFoundException e){
+			return Response.status(404).build();
 		}catch(Exception e){
 			return serverErrorResponse("updating the task "+id, e);
 		}finally {
-			if (tx.isActive()) {
+			if (tx!=null && tx.isActive()) {
 				tx.rollback();
 			}
-			pm.close();
 		}
-		return Response.ok().build();
 	}
 
 	@DELETE
 	@Path("{id}")
 	@Produces("application/json")
 	public Response deleteTask(@PathParam("houseId") Long houseId, @PathParam("id") Long id) {
-		PersistenceManager pm = pmfInstance.getPersistenceManager();
-		Task taskToDelete;
 		try{
+			PersistenceManager pm = pmfInstance.getPersistenceManager();
+			Task taskToDelete;
 			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 			Key taskKey = KeyFactory.createKey(houseKey, Task.class.getSimpleName(), id);
 			taskToDelete = pm.getObjectById(Task.class, taskKey);
-		}catch(Exception e){
-			return Response.status(404).build();
-		}
-		pm.deletePersistent(taskToDelete);
-		return Response.ok().build();
-	}
 
+			pm.deletePersistent(taskToDelete);
+
+			return Response.ok().build();
+
+		}catch (JDOObjectNotFoundException e){
+			return Response.status(404).build();
+		}catch(Exception e){
+			return serverErrorResponse("updating the task "+id, e);
+		}
+	}
 }

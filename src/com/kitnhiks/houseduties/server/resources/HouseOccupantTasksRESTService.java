@@ -2,6 +2,7 @@ package com.kitnhiks.houseduties.server.resources;
 
 import java.util.ArrayList;
 
+import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -20,27 +21,20 @@ import com.sun.jersey.spi.resource.Singleton;
 @Path("/house/{houseId}/occupant/{occupantId}/tasks")
 public class HouseOccupantTasksRESTService extends RESTService{
 
+	public HouseOccupantTasksRESTService(){
+		super();
+	}
+
 	@GET
 	@Produces("application/json")
-	/**
-	 * Retrieve all the tasks of a given occupant
-	 * @param houseId the id of the house
-	 * @param occupantId the id of the occupant
-	 * @return the tasks
-	 */
 	public Response getTasks(@PathParam("houseId") Long houseId, @PathParam("occupantId") Long occupantId) {
 
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
 			Occupant occupant;
-			try{
-				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
-				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
-				occupant = pm.getObjectById(Occupant.class, occupantKey);
-
-			}catch(Exception e){
-				return Response.status(404).build();
-			}
+			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
+			Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
+			occupant = pm.getObjectById(Occupant.class, occupantKey);
 
 			ArrayList<Task> tasks = new ArrayList<Task>();
 			for(Task task : occupant.getTasks()){
@@ -48,6 +42,9 @@ public class HouseOccupantTasksRESTService extends RESTService{
 			}
 
 			return Response.status(200).entity(tasks).build();
+
+		} catch (JDOObjectNotFoundException e){
+			return Response.status(404).build();
 		}catch(Exception e){
 			return serverErrorResponse("retrieving the house "+houseId+" tasks", e);
 		}
