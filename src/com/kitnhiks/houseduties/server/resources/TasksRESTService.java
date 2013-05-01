@@ -39,8 +39,8 @@ public class TasksRESTService extends RESTService{
 				House house = getHouseFromToken(token);
 
 				if (house != null || isAdminToken(token)){
-					Tasks tasksList = new Tasks();
-					return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity(tasksList.getTasks()).build();
+					// TODO pour l'instant je ne retourne que les tache de cleanup
+					return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity(Tasks.getTasks(0)).build();
 				}
 			}
 			return Response.status(403).build();

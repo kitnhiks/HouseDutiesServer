@@ -1,51 +1,94 @@
 package com.kitnhiks.houseduties.server.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.jdo.annotations.IdGeneratorStrategy;
-import javax.jdo.annotations.Persistent;
-import javax.jdo.annotations.PrimaryKey;
+public class Tasks {
 
-public class Tasks implements Serializable{
+	private static Tasks INSTANCE = new Tasks();
+	private static int idCategory = 0;
+	private static int idTask = 0;
 
-	private static final long serialVersionUID = 1L;
 
-	@PrimaryKey
-	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
-	private Long id;
-	@Persistent
-	private final HashMap<String, HashMap<Long, TaskItem>> tasks = new HashMap<String, HashMap<Long, TaskItem>>();
+	private final ArrayList<TaskItemCategory> categories = new ArrayList<TaskItemCategory>();
+	private final HashMap<Integer, ArrayList<TaskItem>> tasksByCategory = new HashMap<Integer, ArrayList<TaskItem>>();
 
-	public Tasks() {
-		HashMap<Long, TaskItem> cleanup = new HashMap<Long, TaskItem>();
-		cleanup.put(new Long(1), new TaskItem("Faire la vaiselle jusqu'à remplir l'égoutoir", 1));
-		cleanup.put(new Long(2), new TaskItem("Passer l'aspirateur dans une pièce", 1));
-		cleanup.put(new Long(3), new TaskItem("Ranger une pièce", 1));
-		cleanup.put(new Long(4), new TaskItem("Laver le sol d'une pièce", 1));
-		tasks.put("cleanup", cleanup);
+	private Tasks() {
+		TaskItemCategory cleanupCategory = new TaskItemCategory(++idCategory, "cleanup");
+		categories.add(cleanupCategory);
+		ArrayList<TaskItem> cleanUpTasks = new ArrayList<TaskItem>();
+		cleanUpTasks.add(new TaskItem(++idTask, cleanupCategory.getId(), "Faire la vaiselle jusqu'à remplir l'égoutoir", 1));
+		cleanUpTasks.add(new TaskItem(++idTask, cleanupCategory.getId(), "Passer l'aspirateur dans une pièce", 1));
+		cleanUpTasks.add(new TaskItem(++idTask, cleanupCategory.getId(), "Ranger une pièce", 1));
+		cleanUpTasks.add(new TaskItem(++idTask, cleanupCategory.getId(), "Laver le sol d'une pièce", 1));
+		tasksByCategory.put(cleanupCategory.getId(), cleanUpTasks);
 	}
 
-	public Long getId() {
-		return id;
+	public static Tasks getInstance()
+	{
+		return INSTANCE;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public static ArrayList<TaskItem> getTasks(int categoryId) {
+		return INSTANCE.tasksByCategory.get(categoryId);
 	}
 
-	public HashMap<String, HashMap<Long, TaskItem>> getTasks() {
-		return tasks;
+	public static ArrayList<TaskItemCategory> getCategories() {
+		return INSTANCE.categories;
+	}
+
+	public class TaskItemCategory implements Serializable{
+		private static final long serialVersionUID = 1L;
+		private int id;
+		private String name;
+
+		public TaskItemCategory(int id, String name){
+			this.name = name;
+		}
+
+		public int getId() {
+			return id;
+		}
+		public void setId(int id) {
+			this.id = id;
+		}
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	public class TaskItem implements Serializable{
 		private static final long serialVersionUID = 1L;
+		private int id;
+		private int categoryId;
 		private String name;
 		private int points;
 
-		public TaskItem(String name, int points){
+		public TaskItem(int id, int categoryId, String name, int points){
+			this.id = id;
+			this.setCategoryId(categoryId);
 			this.name = name;
 			this.points = points;
+		}
+
+		public int getId() {
+			return id;
+		}
+
+		public void setId(int id) {
+			this.id = id;
+		}
+
+		public int getCategoryId() {
+			return categoryId;
+		}
+
+		public void setCategoryId(int categoryId) {
+			this.categoryId = categoryId;
 		}
 
 		public String getName() {
