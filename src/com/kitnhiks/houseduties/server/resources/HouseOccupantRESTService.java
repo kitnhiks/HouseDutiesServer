@@ -1,19 +1,18 @@
 package com.kitnhiks.houseduties.server.resources;
 
 import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
-import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
-import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isValidAuth;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.getToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isValidToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.renewToken;
 
 import java.util.logging.Logger;
 
 import javax.jdo.JDOObjectNotFoundException;
 import javax.jdo.PersistenceManager;
-import javax.jdo.Transaction;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -44,15 +43,14 @@ public class HouseOccupantRESTService extends RESTService{
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
 			House house = pm.getObjectById(House.class, houseId);
-
-			if (isValidAuth(headers, house)){
+			String token = getToken(headers);
+			if (isValidToken(token, house)){
 				occupant.setKey(null);
 
 				house.addOccupant(occupant);
 				pm.makePersistent(house);
 
-				String token = generateToken(house.getName(), house.getPassword());
-				return Response.status(200).header(AUTH_KEY_HEADER, token).entity("{\"id\":\""+occupant.getKey().getId()+"\"}").build();
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity("{\"id\":\""+occupant.getKey().getId()+"\"}").build();
 			}else{
 				return Response.status(403).build();
 			}
@@ -73,16 +71,15 @@ public class HouseOccupantRESTService extends RESTService{
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
 			House house = pm.getObjectById(House.class, houseId);
-
-			if (isValidAuth(headers, house)){
+			String token = getToken(headers);
+			if (isValidToken(token, house)){
 				Occupant occupant;
 				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), id);
 
 				occupant = pm.detachCopy(pm.getObjectById(Occupant.class, occupantKey));
 
-				String token = generateToken(house.getName(), house.getPassword());
-				return Response.status(200).header(AUTH_KEY_HEADER, token).entity(occupant).build();
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity(occupant).build();
 			}else{
 				return Response.status(403).build();
 			}
@@ -90,47 +87,6 @@ public class HouseOccupantRESTService extends RESTService{
 			return Response.status(404).build();
 		}catch(Exception e){
 			return serverErrorResponse("retrieving occupant "+id+" of house "+houseId, e);
-		}
-	}
-
-	@PUT
-	@Path("{id}")
-	@Consumes("application/json")
-	public Response updateOccupant(
-			@Context HttpHeaders headers, //
-			Occupant occupant, //
-			@PathParam("houseId") Long houseId, //
-			@PathParam("id") Long id){
-		Transaction tx = null;
-		try{
-			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			House house = pm.getObjectById(House.class, houseId);
-
-			if (isValidAuth(headers, house)){
-				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
-				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), id);
-
-				tx = pm.currentTransaction();
-				tx.begin();
-				Occupant occupantToUpdate = pm.detachCopy(pm.getObjectById(Occupant.class, occupantKey));
-				occupantToUpdate.update(occupant);
-				pm.makePersistent(occupantToUpdate);
-				tx.commit();
-
-
-				String token = generateToken(house.getName(), house.getPassword());
-				return Response.ok().header(AUTH_KEY_HEADER, token).build();
-			}else{
-				return Response.status(403).build();
-			}
-		} catch (JDOObjectNotFoundException e){
-			return Response.status(404).build();
-		}catch(Exception e){
-			return serverErrorResponse("updating occupant "+id+" of house "+houseId, e);
-		}finally {
-			if (tx!=null && tx.isActive()) {
-				tx.rollback();
-			}
 		}
 	}
 
@@ -144,8 +100,8 @@ public class HouseOccupantRESTService extends RESTService{
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
 			House house = pm.getObjectById(House.class, houseId);
-
-			if (isValidAuth(headers, house)){
+			String token = getToken(headers);
+			if (isValidToken(token, house)){
 				Occupant occupantToDelete;
 				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), id);
@@ -153,8 +109,7 @@ public class HouseOccupantRESTService extends RESTService{
 
 				pm.deletePersistent(occupantToDelete);
 
-				String token = generateToken(house.getName(), house.getPassword());
-				return Response.ok().header(AUTH_KEY_HEADER, token).build();
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).build();
 			}else{
 				return Response.status(403).build();
 			}

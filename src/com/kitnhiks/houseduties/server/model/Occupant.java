@@ -128,7 +128,6 @@ public class Occupant implements Serializable {
 	public void update(Occupant occupant) {
 		setName(occupant.getName());
 		setEmail(occupant.getEmail());
-		setPoints(occupant.getPoints());
 	}
 
 }

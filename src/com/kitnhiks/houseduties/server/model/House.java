@@ -126,8 +126,4 @@ public class House
 	public void addTask(Task newTask){
 		tasks.add(newTask);
 	}
-
-	public void update(House house) {
-		setName(house.getName());
-	}
 }

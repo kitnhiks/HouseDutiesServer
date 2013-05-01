@@ -16,9 +16,9 @@ import com.sun.jersey.spi.resource.Singleton;
 
 @Singleton
 @Path("/house/{houseId}/tasks")
-public class HouseTasksRestService extends RESTService{
+public class HouseTasksRESTService extends RESTService{
 
-	public HouseTasksRestService(){
+	public HouseTasksRESTService(){
 		logger = Logger.getLogger(this.getClass().getName());
 	}
 

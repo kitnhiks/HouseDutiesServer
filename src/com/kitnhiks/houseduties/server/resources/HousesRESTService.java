@@ -1,6 +1,7 @@
 package com.kitnhiks.houseduties.server.resources;
 
-import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isAdmin;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.getToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isAdminToken;
 
 import java.util.logging.Logger;
 
@@ -29,7 +30,8 @@ public class HousesRESTService extends RESTService{
 	public Response fetchHouses(//
 			@Context HttpHeaders headers){
 		try{
-			if (isAdmin(headers)){
+			String token = getToken(headers);
+			if (isAdminToken(token)){
 				PersistenceManager pm = RESTService.pmfInstance.getPersistenceManager();
 
 				Query query = pm.newQuery("select id from " + House.class.getName());

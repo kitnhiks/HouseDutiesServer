@@ -1,7 +1,9 @@
 package com.kitnhiks.houseduties.server.resources;
 
 import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
-import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.getToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isValidToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.renewToken;
 
 import java.util.logging.Logger;
 
@@ -43,20 +45,24 @@ public class HouseOccupantTaskRESTService extends RESTService{
 			@PathParam("occupantId") Long occupantId)
 	{
 		try {
-			task.setKey(null);
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			Occupant occupant;
-			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
-			Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
-			occupant = pm.getObjectById(Occupant.class, occupantKey);
 			House house = pm.getObjectById(House.class, houseId);
+			String token = getToken(headers);
+			if (isValidToken(token, house)){
 
-			occupant.addTask(task);
-			pm.makePersistent(occupant);
+				task.setKey(null);
+				Occupant occupant;
+				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
+				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
+				occupant = pm.getObjectById(Occupant.class, occupantKey);
 
-			String token = generateToken(house.getName(), house.getPassword());
-			return Response.status(200).header(AUTH_KEY_HEADER, token).entity("{\"id\":\""+task.getKey().getId()+"\"}").build();
+				occupant.addTask(task);
+				pm.makePersistent(occupant);
 
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity("{\"id\":\""+task.getKey().getId()+"\"}").build();
+			}else{
+				return Response.status(403).build();
+			}
 		} catch (JDOObjectNotFoundException e){
 			return Response.status(404).build();
 		}catch(Exception e){
@@ -67,18 +73,27 @@ public class HouseOccupantTaskRESTService extends RESTService{
 	@GET
 	@Path("{id}")
 	@Produces("application/json")
-	public Response getTask(@PathParam("houseId") Long houseId, @PathParam("occupantId") Long occupantId, @PathParam("id") Long id) {
+	public Response getTask(//
+			@Context HttpHeaders headers, //
+			@PathParam("houseId") Long houseId, //
+			@PathParam("occupantId") Long occupantId, //
+			@PathParam("id") Long id) {
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			Task task;
-			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
-			Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
-			Key taskKey = KeyFactory.createKey(occupantKey, Task.class.getSimpleName(), id);
+			House house = pm.getObjectById(House.class, houseId);
+			String token = getToken(headers);
+			if (isValidToken(token, house)){
+				Task task;
+				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
+				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
+				Key taskKey = KeyFactory.createKey(occupantKey, Task.class.getSimpleName(), id);
 
-			task = pm.detachCopy(pm.getObjectById(Task.class, taskKey));
+				task = pm.detachCopy(pm.getObjectById(Task.class, taskKey));
 
-			return Response.status(200).entity(task).build();
-
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity(task).build();
+			}else{
+				return Response.status(403).build();
+			}
 		} catch (JDOObjectNotFoundException e){
 			return Response.status(404).build();
 		}catch(Exception e){
@@ -89,20 +104,29 @@ public class HouseOccupantTaskRESTService extends RESTService{
 	@PUT
 	@Path("{id}")
 	@Consumes("application/json")
-	public Response updateTask(Task task, @PathParam("houseId") Long houseId, @PathParam("occupantId") Long occupantId, @PathParam("id") Long id){
+	public Response updateTask(//
+			@Context HttpHeaders headers, //
+			Task task, //
+			@PathParam("houseId") Long houseId, //
+			@PathParam("occupantId") Long occupantId, //
+			@PathParam("id") Long id){
 		try {
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
+			House house = pm.getObjectById(House.class, houseId);
+			String token = getToken(headers);
+			if (isValidToken(token, house)){
+				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
+				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
+				Key taskKey = KeyFactory.createKey(occupantKey, Task.class.getSimpleName(), id);
 
-			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
-			Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
-			Key taskKey = KeyFactory.createKey(occupantKey, Task.class.getSimpleName(), id);
+				Task taskToUpdate = pm.detachCopy(pm.getObjectById(Task.class, taskKey));
+				taskToUpdate.update(task);
+				pm.makePersistent(taskToUpdate);
 
-			Task taskToUpdate = pm.detachCopy(pm.getObjectById(Task.class, taskKey));
-			taskToUpdate.update(task);
-			pm.makePersistent(taskToUpdate);
-
-			return Response.ok().build();
-
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).build();
+			}else{
+				return Response.status(403).build();
+			}
 		} catch (JDOObjectNotFoundException e){
 			return Response.status(404).build();
 		}catch(Exception e){
@@ -113,18 +137,28 @@ public class HouseOccupantTaskRESTService extends RESTService{
 	@DELETE
 	@Path("{id}")
 	@Produces("application/json")
-	public Response deleteTask(@PathParam("houseId") Long houseId, @PathParam("occupantId") Long occupantId, @PathParam("id") Long id) {
+	public Response deleteTask(//
+			@Context HttpHeaders headers, //
+			@PathParam("houseId") Long houseId, //
+			@PathParam("occupantId") Long occupantId, //
+			@PathParam("id") Long id) {
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			Task taskToDelete;
-			Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
-			Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
-			Key taskKey = KeyFactory.createKey(occupantKey, Task.class.getSimpleName(), id);
+			House house = pm.getObjectById(House.class, houseId);
+			String token = getToken(headers);
+			if (isValidToken(token, house)){
+				Task taskToDelete;
+				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
+				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
+				Key taskKey = KeyFactory.createKey(occupantKey, Task.class.getSimpleName(), id);
 
-			taskToDelete = pm.getObjectById(Task.class, taskKey);
-			pm.deletePersistent(taskToDelete);
+				taskToDelete = pm.getObjectById(Task.class, taskKey);
+				pm.deletePersistent(taskToDelete);
 
-			return Response.ok().build();
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).build();
+			}else{
+				return Response.status(403).build();
+			}
 
 		} catch (JDOObjectNotFoundException e){
 			return Response.status(404).build();

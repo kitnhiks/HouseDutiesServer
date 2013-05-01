@@ -3,6 +3,9 @@ package com.kitnhiks.houseduties.server.resources;
 
 import static com.kitnhiks.houseduties.server.resources.RESTConst.AUTH_KEY_HEADER;
 import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.generateToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.getToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isValidToken;
+import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.renewToken;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -14,10 +17,11 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
 import com.kitnhiks.houseduties.server.model.House;
@@ -90,13 +94,20 @@ public class HouseRESTService extends RESTService{
 	@Path("{id}")
 	@GET
 	@Produces("application/json")
-	public Response fetchHouse(@PathParam("id") Long id) {
+	public Response fetchHouse(//
+			@Context HttpHeaders headers, //
+			@PathParam("id") Long id) {
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-
-			House house = pm.detachCopy(pm.getObjectById(House.class, id));
-
-			return Response.status(200).entity(house).build();
+			House house = pm.getObjectById(House.class, id);
+			String token = getToken(headers);
+			if (isValidToken(token, house)){
+				house = pm.detachCopy(house);
+				house.setPassword(null);
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity(house).build();
+			}else{
+				return Response.status(403).build();
+			}
 
 		} catch (JDOObjectNotFoundException e){
 			return Response.status(404).build();
@@ -105,38 +116,23 @@ public class HouseRESTService extends RESTService{
 		}
 	}
 
-	@PUT
-	@Path("{id}")
-	@Consumes("application/json")
-	public Response updateHouse (House house, @PathParam("id") Long id){
-		try{
-			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			House houseToUpdate = pm.getObjectById(House.class, id);
-
-			houseToUpdate.update(house);
-			pm.makePersistent(houseToUpdate);
-
-			return Response.ok().build();
-
-		} catch (JDOObjectNotFoundException e){
-			return Response.status(404).build();
-		}catch (Exception e){
-			return serverErrorResponse("updating the house "+id, e);
-		}
-	}
-
 	@DELETE
 	@Path("{id}")
 	@Produces("application/json")
-	public Response deleteHouse(@PathParam("id") Long id) {
+	public Response deleteHouse(//
+			@Context HttpHeaders headers, //
+			@PathParam("id") Long id) {
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-
 			House houseToDelete = pm.getObjectById(House.class, id);
+			String token = getToken(headers);
+			if (isValidToken(token, houseToDelete)){
+				pm.deletePersistent(houseToDelete);
 
-			pm.deletePersistent(houseToDelete);
-
-			return Response.ok().build();
+				return Response.ok().build();
+			}else{
+				return Response.status(403).build();
+			}
 
 		} catch (JDOObjectNotFoundException e){
 			return Response.status(404).build();
