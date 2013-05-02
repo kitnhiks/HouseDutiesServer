@@ -7,22 +7,22 @@ import java.util.HashMap;
 public class Tasks {
 
 	private static Tasks INSTANCE = new Tasks();
-	private static int idCategory = 0;
-	private static int idTask = 0;
+	private static long idCategory = 0;
+	private static long idTask = 0;
 
 
 	private final ArrayList<TaskItemCategory> categories = new ArrayList<TaskItemCategory>();
-	private final HashMap<Integer, ArrayList<TaskItem>> tasksByCategory = new HashMap<Integer, ArrayList<TaskItem>>();
+	private final HashMap<Long, ArrayList<TaskItem>> tasksByCategory = new HashMap<Long, ArrayList<TaskItem>>();
 
 	private Tasks() {
-		TaskItemCategory cleanupCategory = new TaskItemCategory(++idCategory, "cleanup");
+		TaskItemCategory cleanupCategory = new TaskItemCategory(idCategory++, "cleanup");
 		categories.add(cleanupCategory);
 		ArrayList<TaskItem> cleanUpTasks = new ArrayList<TaskItem>();
-		cleanUpTasks.add(new TaskItem(++idTask, cleanupCategory.getId(), "Faire la vaiselle jusqu'à remplir l'égoutoir", 1));
-		cleanUpTasks.add(new TaskItem(++idTask, cleanupCategory.getId(), "Passer l'aspirateur dans une pièce", 1));
-		cleanUpTasks.add(new TaskItem(++idTask, cleanupCategory.getId(), "Ranger une pièce", 1));
-		cleanUpTasks.add(new TaskItem(++idTask, cleanupCategory.getId(), "Laver le sol d'une pièce", 1));
-		tasksByCategory.put(cleanupCategory.getId(), cleanUpTasks);
+		cleanUpTasks.add(new TaskItem(idTask++, cleanupCategory.getKey(), "Faire la vaiselle jusqu'à remplir l'égoutoir", 1));
+		cleanUpTasks.add(new TaskItem(idTask++, cleanupCategory.getKey(), "Passer l'aspirateur dans une pièce", 1));
+		cleanUpTasks.add(new TaskItem(idTask++, cleanupCategory.getKey(), "Ranger une pièce", 1));
+		cleanUpTasks.add(new TaskItem(idTask++, cleanupCategory.getKey(), "Laver le sol d'une pièce", 1));
+		tasksByCategory.put(cleanupCategory.getKey(), cleanUpTasks);
 	}
 
 	public static Tasks getInstance()
@@ -30,8 +30,8 @@ public class Tasks {
 		return INSTANCE;
 	}
 
-	public static ArrayList<TaskItem> getTasks(int categoryId) {
-		return INSTANCE.tasksByCategory.get(categoryId);
+	public static ArrayList<TaskItem> getTasks(long categoryKey) {
+		return INSTANCE.tasksByCategory.get(categoryKey);
 	}
 
 	public static ArrayList<TaskItemCategory> getCategories() {
@@ -40,18 +40,19 @@ public class Tasks {
 
 	public class TaskItemCategory implements Serializable{
 		private static final long serialVersionUID = 1L;
-		private int id;
+		private long key;
 		private String name;
 
-		public TaskItemCategory(int id, String name){
+		public TaskItemCategory(long key, String name){
+			this.key = key;
 			this.name = name;
 		}
 
-		public int getId() {
-			return id;
+		public long getKey() {
+			return key;
 		}
-		public void setId(int id) {
-			this.id = id;
+		public void setKey(long key) {
+			this.key = key;
 		}
 		public String getName() {
 			return name;
@@ -63,32 +64,32 @@ public class Tasks {
 
 	public class TaskItem implements Serializable{
 		private static final long serialVersionUID = 1L;
-		private int id;
-		private int categoryId;
+		private long key;
+		private long categoryKey;
 		private String name;
 		private int points;
 
-		public TaskItem(int id, int categoryId, String name, int points){
-			this.id = id;
-			this.setCategoryId(categoryId);
+		public TaskItem(long key, long categoryKey, String name, int points){
+			this.key = key;
+			this.categoryKey = categoryKey;
 			this.name = name;
 			this.points = points;
 		}
 
-		public int getId() {
-			return id;
+		public long getKey() {
+			return key;
 		}
 
-		public void setId(int id) {
-			this.id = id;
+		public void setKey(long key) {
+			this.key = key;
 		}
 
-		public int getCategoryId() {
-			return categoryId;
+		public long getCategoryKey() {
+			return categoryKey;
 		}
 
-		public void setCategoryId(int categoryId) {
-			this.categoryId = categoryId;
+		public void setCategoryKey(long categoryKey) {
+			this.categoryKey = categoryKey;
 		}
 
 		public String getName() {

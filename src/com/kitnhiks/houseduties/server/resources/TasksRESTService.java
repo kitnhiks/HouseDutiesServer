@@ -8,7 +8,6 @@ import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.renewToken;
 
 import java.util.logging.Logger;
 
-import javax.jdo.PersistenceManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -33,7 +32,6 @@ public class TasksRESTService extends RESTService{
 	public Response fetchTasks(//
 			@Context HttpHeaders headers) {
 		try{
-			PersistenceManager pm = pmfInstance.getPersistenceManager();
 			String token = getToken(headers);
 			if (token != null){
 				House house = getHouseFromToken(token);

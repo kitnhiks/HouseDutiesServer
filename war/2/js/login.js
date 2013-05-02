@@ -26,7 +26,9 @@ var jsonContentType = "application/json; charset=utf-8";
 var context = {
 	token : "",
 	houseId : "",
-	occupantId : ""
+	occupantId : "",
+	tasks : undefined,
+	breadCrumb : {"crumbs" : [{"label" : "home", "url" : "#"}]}
 }
 
 var inputValues = {
@@ -129,7 +131,7 @@ getJsonWithToken = function(url, callback, statusCode){
 		dataType: "json",
 		success: callback,
 		error: function(request, textStatus, errorThrown) {
-			log(textStatus+":"+errorThrown);
+			log(textStatus+" : "+errorThrown);
 		},
 		complete: function(){
 			stopWait();
@@ -145,6 +147,14 @@ setToken = function(value){
 
 getToken = function(){
 	return context.token;
+}
+
+storeTasks = function (data){
+	context.tasks = {};
+	var nbTasks =  data.length;
+	for (var i=0; i<nbTasks; i++){
+		context.tasks[data[i].key] = data[i];
+	}
 }
 
 /*****
@@ -169,11 +179,11 @@ clickSignup = function(){
 	return false;
 }
 
-clickCreateOccupant = function(){
+clickAddOccupant = function(){
 	var occupantName = $("#occupantName").val();
 	var occupantPassword = $("#occupantPassword").val();
 	if (checkOccupantMandatoryFields(occupantName)){
-		createOccupant(occupantName, occupantPassword);
+		addOccupant(occupantName, occupantPassword);
 	}
 	return false;
 }
@@ -192,7 +202,7 @@ clickOccupantTask = function (){
 }
 
 clickAddOccupantTask = function (){
-	alert ("TBI");
+	addOccupantTask(this.id);
 }
 
 
@@ -232,7 +242,7 @@ signup = function (houseName, housePassword){
 	)
 }
 
-createOccupant = function(occupantName, occupantPassword){
+addOccupant = function(occupantName, occupantPassword){
 	postJsonWithToken(
 		HOUSE_URL+context.houseId+"/occupant", 
 		'{"name": "'+occupantName+'", "password": "'+occupantPassword+'"}', 
@@ -331,9 +341,32 @@ loadTasks = function(){
 		TASKS_URL,
 		function(data, textStatus, request) {
 			setToken(request.getResponseHeader("X-AuthKey"));
+			if (context.tasks == undefined){
+				storeTasks(data);
+			}
 			showTasks(data);
 		},
 		{
+			403: function() {
+				log("unknown credentials");
+			}
+		}
+	)
+}
+
+addOccupantTask = function(taskId){
+	postJsonWithToken(
+		HOUSE_URL+context.houseId+"/occupant/"+context.occupantId+"/task/", 
+		JSON.stringify(context.tasks[taskId]),
+		function(data, textStatus, request) {
+			setToken(request.getResponseHeader("X-AuthKey"));
+			context.breadCrumb.crumbs.pop();
+			loadOccupant();
+		},
+		{
+			404: function() {
+				log("unknown house or occupant");
+			},
 			403: function() {
 				log("unknown credentials");
 			}
@@ -385,73 +418,92 @@ var loginContent =
 		'</div>'+
 	'</div>';
 			
-var houseHomeHeader = '<div class="panel">{{>houseName}}</div>';
+var houseHomeHeader = 
+	'<div class="panel">{{>houseName}}</div>';
+	
 var houseHomeContent = 
-						'<div id="occupantsPanel" class="row">'+
-						'</div>'+
-						'<hr>'+
-						'<div id="newHouseOccupantPanel" class="row">'+
-						'</div>';
+	'<div id="occupantsPanel" class="row">'+
+	'</div>'+
+	'<hr>'+
+	'<div id="newHouseOccupantPanel" class="row">'+
+	'</div>';
 						
 
 var newHouseOccupantForm = 
-						'<div class="row">'+
-							'<div class="row">'+
-								'<div class="eight columns push-two">'+
-									'<input id="occupantName" class="text-within" type="text" value="'+inputValues.occupantName+'"/>'+
-								'</div>'+
-							'</div>'+
-							'<div class="row">'+
-								'<div class="eight columns push-two">'+
-								  '<input id="occupantPassword" class="text-within" type="text" value="'+inputValues.occupantPassword+'"/>'+
-								'</div>'+
-							'</div>'+
-							'<div class="row">'+
-								'<div class="two columns">'+
-									'<p><a id="createOccupant" href="#" class="button">Create</a></p>'+
-								'</div>'+
-							'</div>'+
-						'</div>';
+	'<div class="row">'+
+		'<div class="row">'+
+			'<div class="eight columns push-two">'+
+				'<input id="occupantName" class="text-within" type="text" value="'+inputValues.occupantName+'"/>'+
+			'</div>'+
+		'</div>'+
+		'<div class="row">'+
+			'<div class="eight columns push-two">'+
+			  '<input id="occupantPassword" class="text-within" type="text" value="'+inputValues.occupantPassword+'"/>'+
+			'</div>'+
+		'</div>'+
+		'<div class="row">'+
+			'<div class="two columns">'+
+				'<p><a id="addOccupant" href="#" class="button">Add</a></p>'+
+			'</div>'+
+		'</div>'+
+	'</div>';
 						
 var houseOccupantsContent = 
-							'{{#occupants}}'+
-								'<div class="row">'+
-									'<div class="eight columns push-two">'+
-										'<p><a id="{{key.id}}" href="#" class="button">{{name}} ({{points}})</a></p>'+
-									'</div>'+
-								'</div>'+
-							'{{/occupants}}';
+	'{{#occupants}}'+
+		'<div class="row">'+
+			'<div class="eight columns push-two">'+
+				'<p><a id="{{key.id}}" href="#" class="button">{{name}} ({{points}})</a></p>'+
+			'</div>'+
+		'</div>'+
+	'{{/occupants}}';
 							
-var occupantHomeHeader = '<div class="panel">{{>occupantName}}</div>';
+var occupantHomeHeader = 
+	'<div class="panel">{{>occupantName}}</div>';
+	
 var occupantHomeContent = 
-						'<div id="houseOccupantTasksPanel" class="row">'+
-						'</div>'+
-						'<hr>'+
-						'<div id="newHouseOccupantTaskPanel" class="row">'+
-						'</div>';
+	'<div id="houseOccupantTasksPanel" class="row">'+
+	'</div>'+
+	'<hr>'+
+	'<div id="newHouseOccupantTaskPanel" class="row">'+
+	'</div>';
 						
 var newHouseOccupantTaskForm = 
-				'<div class="row">'+
-					'<div class="row">'+
-						'<div id="tasksPanel" class="row">'+
-						'</div>'+
-						'<div class="two columns">'+
-							'<p><a id="addTask" href="#" class="button">Add Task</a></p>'+
-						'</div>'+
-					'</div>'+
-				'</div>';
+	'<div class="row">'+
+		'<div id="tasksPanel" class="row">'+
+		'</div>'+
+		'<div class="two columns">'+
+			'<p><a id="addTask" href="#" class="button">Add Task</a></p>'+
+		'</div>'+
+	'</div>';
 						
 var houseOccupantTasksContent = 
-						'{{#tasks}}'+
-							'<div class="row">'+
-								'<div class="eight columns push-two">'+
-									'<p><a id="{{key.id}}" href="#" class="button">{{name}} ({{points}})</a></p>'+
-								'</div>'+
-							'</div>'+
-						'{{/tasks}}';
+	'{{#tasks}}'+
+		'<div class="row">'+
+			'<div class="eight columns push-two">'+
+				'<p><a id="{{key.id}}" href="#" class="button">{{name}} ({{points}})</a></p>'+
+			'</div>'+
+		'</div>'+
+	'{{/tasks}}';
+						
+var tasksContent = 
+	'{{#tasks}}'+
+		'<div class="row">'+
+			'<div class="eight columns push-two">'+
+				'<p><a id="{{key}}" href="#" class="button">{{name}} ({{points}})</a></p>'+
+			'</div>'+
+		'</div>'+
+	'{{/tasks}}';
+	
+var breadCrumbContent = 
+	'<p>'+
+		'{{#crumbs}}'+
+			'<a href="{{url}}" class="button">{{label}}</a>'+
+		'{{/crumbs}}'+
+	'</p>';
 
 showLogin = function (){
 	$('#header').html(Mustache.to_html(loginHeader, null, partials));
+	$('#breadcrumb').html(Mustache.to_html(breadCrumbContent, context.breadCrumb, partials));
 	$('#content').html(Mustache.to_html(loginContent, null, partials));
 	$("#signup").click(clickSignup);
 	$("#signin").click(clickSignin);
@@ -460,9 +512,11 @@ showLogin = function (){
 
 showHouse = function(house){
 	$('#header').html(Mustache.to_html(houseHomeHeader, house, partials));
+	context.breadCrumb.crumbs.push({"label" : house.name, "url" : "#/h"+context.houseId});
+	$('#breadcrumb').html(Mustache.to_html(breadCrumbContent, context.breadCrumb, partials));
 	$('#content').html(Mustache.to_html(houseHomeContent, null, partials));
 	$('#newHouseOccupantPanel').html(Mustache.to_html(newHouseOccupantForm, null, partials));
-	$("#createOccupant").click(clickCreateOccupant);
+	$("#addOccupant").click(clickAddOccupant);
 	InputWithTextHandler();
 }
 
@@ -477,6 +531,8 @@ showOccupants = function(occupants){
 
 showOccupant = function(occupant){
 	$('#header').html(Mustache.to_html(occupantHomeHeader, occupant, partials));
+	context.breadCrumb.crumbs.push({"label" : occupant.name, "url" : "#/h"+context.houseId+"/o"+context.occupantId});
+	$('#breadcrumb').html(Mustache.to_html(breadCrumbContent, context.breadCrumb, partials));
 	$('#content').html(Mustache.to_html(occupantHomeContent, null, partials));
 	$('#newHouseOccupantTaskPanel').html(Mustache.to_html(newHouseOccupantTaskForm, null, partials));
 	$("#addTask").click(clickShowTasks);
@@ -500,7 +556,8 @@ showTasks = function(tasks){
 	$('#tasksPanel').html(Mustache.to_html(tasksContent, {"tasks" : tasks}, partials));
 	var nbTasks = tasks.length;
 	for (i=0; i<nbTasks; i++){
-		var taskId = tasks[i].key.id;
+		var taskId = tasks[i].key;
 		$("#"+taskId).click(clickAddOccupantTask);
+		delete context.tasks[i].key;
 	}
 }

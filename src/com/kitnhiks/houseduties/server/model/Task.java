@@ -12,7 +12,7 @@ import com.google.appengine.api.datastore.Key;
 @PersistenceCapable
 public class Task implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 2L;
 
 	@PrimaryKey
 	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
@@ -22,7 +22,7 @@ public class Task implements Serializable {
 	@Persistent
 	private int points = 0;
 	@Persistent
-	private long category;
+	private long categoryKey;
 	@Persistent
 	private int priority;
 	@Persistent
@@ -74,18 +74,18 @@ public class Task implements Serializable {
 
 
 	/**
-	 * @return the category
+	 * @return the categoryKey
 	 */
-	public long getCategory() {
-		return category;
+	public long getCategoryKey() {
+		return categoryKey;
 	}
 
 
 	/**
-	 * @param category the category to set
+	 * @param categoryKey the categoryKey to set
 	 */
-	public void setCategory(long category) {
-		this.category = category;
+	public void setCategoryKey(long categoryKey) {
+		this.categoryKey = categoryKey;
 	}
 
 
@@ -143,7 +143,7 @@ public class Task implements Serializable {
 	public void update(Task task) {
 		setName(task.getName());
 		setPoints(task.getPoints());
-		setCategory(task.getCategory());
+		setCategoryKey(task.getCategoryKey());
 		setPriority(task.getPriority());
 		setDeadline(task.getDeadline());
 		setDoneDate(task.getDoneDate());
