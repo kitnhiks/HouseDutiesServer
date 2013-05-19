@@ -7,7 +7,7 @@ Summary
 // Controllers [CTRL]
 // Network [NETW]
 // Views [VIEW]
-
+// Pages [PAGE]
 
 /*****
 [CONF]
@@ -18,18 +18,13 @@ var HOUSE_URL = BASE_URL+"house/";
 var LOGIN_URL = HOUSE_URL+"login/";
 var TASKS_URL = BASE_URL+"tasks/";
 var jsonContentType = "application/json; charset=utf-8";
+var paramSeparator = "_";
 
 /*****
 [INIT]
 ******/
-
-var context = {
-	token : "",
-	houseId : "",
-	occupantId : "",
-	tasks : undefined,
-	breadCrumb : {"crumbs" : [{"label" : "home", "url" : "#"}]}
-}
+var token = "";
+var context = {};
 
 var inputValues = {
 	"houseName" : "Enter Name",
@@ -42,9 +37,27 @@ $.ajaxSetup ({
 	cache: false
 });
 
-$(document).ready(function() {
-	showLogin();
-});
+refreshPage = function(paramString){
+	try{
+		var params = paramString.split(paramSeparator);
+		switch(params[0]){
+			case pageHouse : 
+				var houseId = params[1];
+				loadPageHouse(houseId);
+				break;
+			case pageOccupant : 
+				var houseId = params[1];
+				var occupantId = params[2];
+				loadPageOccupant(houseId, occupantId);
+				break;
+			default : 
+				loadPageLogin();
+				break;
+		}
+	}catch(err){
+		loadPageLogin();
+	}
+}
 
 /*****
 [TOOL]
@@ -142,11 +155,11 @@ getJsonWithToken = function(url, callback, statusCode){
 }
 
 setToken = function(value){
-	context.token = value;
+	token = value;
 }
 
 getToken = function(){
-	return context.token;
+	return token;
 }
 
 storeTasks = function (data){
@@ -189,20 +202,23 @@ clickAddOccupant = function(){
 }
 
 clickOccupant = function (){
-	context.occupantId = this.id;
-	loadOccupant();
+	changePage(pageOccupant+paramSeparator+context.houseId+paramSeparator+this.id);
+	return false;
 }
 
 clickShowTasks = function (){
 	loadTasks();
+	return false;
 }
 
 clickOccupantTask = function (){
 	alert ("TBI");
+	return false;
 }
 
 clickAddOccupantTask = function (){
 	addOccupantTask(this.id);
+	return false;
 }
 
 
@@ -216,7 +232,7 @@ signin = function (houseName, housePassword){
 		'{"name": "'+houseName+'", "password": "'+housePassword+'"}', 
 		function(data, textStatus, request) {
 			setToken(request.getResponseHeader("X-AuthKey"));
-			loadHouse(data.id);
+			changePage(pageHouse+paramSeparator+data.id);
 		},
 		{
 			404: function() {
@@ -232,7 +248,7 @@ signup = function (houseName, housePassword){
 		'{"name": "'+houseName+'", "password": "'+housePassword+'"}', 
 		function(data, textStatus, request) {
 			setToken(request.getResponseHeader("X-AuthKey"));
-			loadHouse(data.id);
+			changePage(pageHouse+paramSeparator+data.id);
 		},
 		{
 			404: function() {
@@ -261,21 +277,20 @@ addOccupant = function(occupantName, occupantPassword){
 	)
 }
 
-loadHouse = function(id){
+loadHouse = function(callback){
 	getJsonWithToken(
-		HOUSE_URL+id, 
-		function(data, textStatus, request) {
-			context.houseId = id;
+		HOUSE_URL+context.houseId, 
+		function(house, textStatus, request) {
 			setToken(request.getResponseHeader("X-AuthKey"));
-			showHouse(data);
-			loadOccupants();
-		},
+			callback(house);
+		}, 
 		{
 			404: function() {
 				log("unknown house");
 			},
 			403: function() {
 				log("unknown credentials");
+				changePage(pageLogin);
 			}
 		}
 	)
@@ -299,13 +314,12 @@ loadOccupants = function(){
 	)
 }
 
-loadOccupant = function(){
+loadOccupant = function(callback){
 	getJsonWithToken(
 		HOUSE_URL+context.houseId+"/occupant/"+context.occupantId,
-		function(data, textStatus, request) {
+		function(occupant, textStatus, request) {
 			setToken(request.getResponseHeader("X-AuthKey"));
-			showOccupant(data);
-			loadOccupantTasks(data.key.id);
+			callback(occupant);
 		},
 		{
 			404: function() {
@@ -313,6 +327,7 @@ loadOccupant = function(){
 			},
 			403: function() {
 				log("unknown credentials");
+				changePage(pageLogin);
 			}
 		}
 	)
@@ -360,8 +375,7 @@ addOccupantTask = function(taskId){
 		JSON.stringify(context.tasks[taskId]),
 		function(data, textStatus, request) {
 			setToken(request.getResponseHeader("X-AuthKey"));
-			context.breadCrumb.crumbs.pop();
-			loadOccupant();
+			loadOccupantTasks();
 		},
 		{
 			404: function() {
@@ -380,7 +394,7 @@ addOccupantTask = function(taskId){
 
 var partials = 
 			{
-				houseName : '<h1>Welcome into the houde {{name}}</h1>',
+				houseName : '<h1>Welcome into the house {{name}}</h1>',
 				occupantName : '<h1>The tasks {{name}} is working on</h1>'
 			};
 
@@ -497,13 +511,18 @@ var tasksContent =
 var breadCrumbContent = 
 	'<p>'+
 		'{{#crumbs}}'+
-			'<a href="{{url}}" class="button">{{label}}</a>'+
+			'{{#url}}'+
+				'<a href="{{url}}" class="button">'+
+			'{{/url}}'+
+			'{{label}}'+
+			'{{#url}}'+
+				'</a>'+
+			'{{/url}}'+
 		'{{/crumbs}}'+
 	'</p>';
 
 showLogin = function (){
 	$('#header').html(Mustache.to_html(loginHeader, null, partials));
-	$('#breadcrumb').html(Mustache.to_html(breadCrumbContent, context.breadCrumb, partials));
 	$('#content').html(Mustache.to_html(loginContent, null, partials));
 	$("#signup").click(clickSignup);
 	$("#signin").click(clickSignin);
@@ -512,8 +531,6 @@ showLogin = function (){
 
 showHouse = function(house){
 	$('#header').html(Mustache.to_html(houseHomeHeader, house, partials));
-	context.breadCrumb.crumbs.push({"label" : house.name, "url" : "#/h"+context.houseId});
-	$('#breadcrumb').html(Mustache.to_html(breadCrumbContent, context.breadCrumb, partials));
 	$('#content').html(Mustache.to_html(houseHomeContent, null, partials));
 	$('#newHouseOccupantPanel').html(Mustache.to_html(newHouseOccupantForm, null, partials));
 	$("#addOccupant").click(clickAddOccupant);
@@ -531,8 +548,6 @@ showOccupants = function(occupants){
 
 showOccupant = function(occupant){
 	$('#header').html(Mustache.to_html(occupantHomeHeader, occupant, partials));
-	context.breadCrumb.crumbs.push({"label" : occupant.name, "url" : "#/h"+context.houseId+"/o"+context.occupantId});
-	$('#breadcrumb').html(Mustache.to_html(breadCrumbContent, context.breadCrumb, partials));
 	$('#content').html(Mustache.to_html(occupantHomeContent, null, partials));
 	$('#newHouseOccupantTaskPanel').html(Mustache.to_html(newHouseOccupantTaskForm, null, partials));
 	$("#addTask").click(clickShowTasks);
@@ -560,4 +575,77 @@ showTasks = function(tasks){
 		$("#"+taskId).click(clickAddOccupantTask);
 		delete context.tasks[i].key;
 	}
+}
+
+showBreadCrumb = function(){
+	$('#breadcrumb').html(Mustache.to_html(breadCrumbContent, context.breadCrumb, partials));
+}
+
+/*****
+[PAGE]
+******/
+
+// Login
+//  |- House
+//   |- HouseTasks
+//   |- HouseOccupant
+//    |- HouseOccupantTasks
+//  |- Tasks
+
+loadPageLogin = function(){
+	context = {	
+		breadCrumb : 
+					{"crumbs" : 
+						[
+							{"label" : "home"}
+						]
+					}
+	}
+	showBreadCrumb();
+	showLogin();
+}
+
+loadPageHouse = function(houseId){
+	context.houseId = houseId;
+	loadHouse( 
+		function(house) {
+			context = {
+				houseId : house.id,
+				breadCrumb : 
+							{"crumbs" : 
+								[
+									{"label" : "home", "url" : "#p="+pageLogin},
+									{"label" : house.name}
+								]
+							}
+			}
+			showBreadCrumb();
+			showHouse(house);
+			loadOccupants();	
+		}
+	);
+}
+
+loadPageOccupant = function(houseId, occupantId){
+	context.houseId = houseId;
+	context.occupantId = occupantId;
+	loadOccupant(
+		function(occupant) {
+			context = {
+				houseId : context.houseId,
+				occupantId : occupant.key.id,
+				breadCrumb : 
+							{"crumbs" : 
+								[
+									{"label" : "home", "url" : "#p="+pageLogin},
+									{"label" : "back to your house", "url" : "#p="+pageHouse+paramSeparator+context.houseId},
+									{"label" : occupant.name}
+								]
+							}
+			}
+			showBreadCrumb();
+			showOccupant(occupant);
+			loadOccupantTasks();
+		}
+	);
 }
