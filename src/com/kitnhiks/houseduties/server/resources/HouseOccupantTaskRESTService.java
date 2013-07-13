@@ -49,13 +49,14 @@ public class HouseOccupantTaskRESTService extends RESTService{
 			House house = pm.getObjectById(House.class, houseId);
 			String token = getToken(headers);
 			if (isValidToken(token, house)){
-
 				task.setKey(null);
+
 				Occupant occupant;
 				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
 				occupant = pm.getObjectById(Occupant.class, occupantKey);
 
+				pm.makePersistent(task);
 				occupant.addTask(task);
 				pm.makePersistent(occupant);
 

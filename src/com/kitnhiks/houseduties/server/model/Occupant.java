@@ -122,6 +122,7 @@ public class Occupant implements Serializable {
 	 * @param occupant the occupant to add
 	 */
 	public void addTask(Task newTask){
+		points += newTask.getPoints();
 		tasks.add(newTask);
 	}
 

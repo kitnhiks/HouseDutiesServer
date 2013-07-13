@@ -12,7 +12,7 @@ import com.google.appengine.api.datastore.Key;
 @PersistenceCapable
 public class Task implements Serializable {
 
-	private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 3L;
 
 	@PrimaryKey
 	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
