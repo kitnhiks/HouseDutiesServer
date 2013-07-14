@@ -1,36 +1,51 @@
 <!doctype html>
+<html ng-app="houseDuties">
+<head>
 
-<html>
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-	<meta name="viewport" content="width=device-width" />
-	<link type="text/css" rel="stylesheet" href="HouseDuties.css">
-    <title>Kit n Hiks</title>
-    <script type="text/javascript" language="javascript" src="houseduties/houseduties.nocache.js"></script>
-  </head>
-  <body onLoad='init();'>
-    <iframe src="javascript:''" id="__gwt_historyFrame" tabIndex='-1' style="position:absolute;width:0;height:0;border:0"></iframe>
+    <title>HouseDuties | Welcome</title>
 
-	<div id="header">
-		<h1>House duties made easy</h1>
-	</div>
-	<div id="content">
-		<div id="helpContent">
-			<div id="helpButton"></div>
-			<div id="howto">
-				Create your house and start doing some house duties.<br/>
-				share your house with all the occupants and see who do the more stuff !
-				<noscript>
-				(If you don't activate javascript, you won't be able to use this application.)
-				</noscript>
-			</div>
-		</div>
-		<div id="menu"></div>
-		<div id="wizard"><div id="spinner"></div></div>
-		<div class="separateur"></div>
-	</div>
-	<div id="footer">
-		<p><a href="mailto:kitnhiks@gmail.com">Kit n Hiks Prod.</a> - Tous droits réservés.
-	</div>
-  </body>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HouseDuties is an application to help you deal with house duties">
+    <meta name="author" content="kitnhiks">
+    <!-- [STYLE] -->
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/bootstrap-responsive.css">
+    <link rel="stylesheet" href="css/houseDuties.css">
+    <!-- [!STYLE] -->
+</head>
+<body>
+
+<div class="container min-size">
+    <!-- [HEADER] -->
+    <div class="hero-unit ">
+        <h1>Welcome to HouseDuties</h1>
+    </div>
+    <!-- [!HEADER] -->
+    <div id="msg"></div>
+    <!-- [CONTENT] -->
+
+    <div ng-view></div>
+
+    <!-- [!CONTENT]-->
+    <!-- [HELP] -->
+    <div class="row">
+        <div class="span2 logo">
+            <img src="img/houduty.png" />
+        </div>
+        <div class="span8" id="helpText"></div>
+    </div>
+    <!-- [!HELP] -->
+</div>
+
+
+<!-- [FOOTER] -->
+
+<!-- [!FOOTER] -->
+
+<!-- [SCRIPTS] -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+<script src="js/jquery.js"></script>
+<script src="js/houseDuties.js"></script>
+</body>
 </html>

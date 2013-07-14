@@ -66,6 +66,7 @@ public class HouseRESTService extends RESTService{
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Path("login")
 	@POST
 	@Consumes("application/json")
@@ -74,18 +75,20 @@ public class HouseRESTService extends RESTService{
 
 		try{
 			PersistenceManager pm = pmfInstance.getPersistenceManager();
-			Query query = pm.newQuery(House.class, "name == \""+house.getName()+"\" && password == \""+house.getPassword()+"\"");
-			@SuppressWarnings("unchecked")
-			List<House> houseResults = (List<House>) query.execute();
+			List<House> houseResults = (List<House>) pm.newQuery(House.class, "name == \""+house.getName()+"\" && password == \""+house.getPassword()+"\"").execute();
 			int nbResults = houseResults.size();
 			if (nbResults == 1){
 				house = houseResults.get(0);
 				return Response.status(200).header(AUTH_KEY_HEADER, generateToken(house.getName(), house.getPassword())).entity("{\"id\":\""+house.getId()+"\"}").build();
 			}else if (nbResults==0){
-				return Response.status(404).build();
-			}else{
-				throw new RuntimeException ("Corrupted data...");
+				nbResults = ((List<House>)pm.newQuery(House.class, "name == \""+house.getName()+"\"").execute()).size();
+				if (nbResults == 1){
+					return Response.status(403).build();
+				}else if (nbResults == 0){
+					return Response.status(404).build();
+				}
 			}
+			throw new RuntimeException ("Corrupted data...");
 		}catch (Exception e){
 			return serverErrorResponse("logging to the house", e);
 		}

@@ -1,0 +1,10 @@
+<ul ng-controller="occupantCtrl">
+    <li ng-repeat="occupant in occupants">
+        {{occupant.name}} ({{occupant.id}})
+    </li>
+</ul>
+<form class="form-signin" ng-controller="addOccupantCtrl">
+    <input id="occupantName" class="input-block-level" ng-model="houseName" placeholder="Occupant Name" type="text"/>
+    <input id="occupantPassword" class="input-block-level" ng-model="housePassword" type="password" placeholder="Password"/>
+    <p><a id="addOccupant" href="#" class="button">Add</a></p>
+</form>
