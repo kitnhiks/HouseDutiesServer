@@ -49,9 +49,12 @@ showMsg = function (title, message, type){
 
 showHelp = function (htmlText){
     $("#helpText").html(htmlText);
-}
+};
 showHelp('<p>HouseDuties <strong>helps you deal</strong> with all these <strong>"little pleasures" of your daily life </strong>as a familly, a couple or a roommate.</p>');
 
+removeMsg = function(){
+    $("#msg").html('');
+}
 
 startWait = function (){
     //TODO : Throbber ?
@@ -115,12 +118,20 @@ getToken = function(){
  [CTRL]
  ******/
 
-occupantCtrl = function ($scope){
-    $scope.house = {name : "houseTest", id : "1"};
-    $scope.occupants = [{name : "o1", id:"1-1"}, {name : "o2", id:"1-2"}, {name : "o3", id:"1-3"}];
+occupantListCtrl= function ($scope, $route, $routeParams, $location){
+    $scope.clickAddOccupant = function(){
+        addOccupant($scope.occupantName, $scope.occupantPassword, $scope, $location);
+        return false;
+    };
+    $scope.showOccupant = function(occupantId){
+        changePage('/H'+context.houseId+'/O'+occupantId, $scope, $location);
+        return false;
+    };
+    loadOccupants($scope,$location);
 };
 
 loginCtrl = function ($scope, $route, $routeParams, $location){
+    removeMsg();
     $scope.clickSignin = function(){
         signin($scope.houseName, $scope.housePassword, $scope, $location);
         return false;
@@ -128,7 +139,24 @@ loginCtrl = function ($scope, $route, $routeParams, $location){
 };
 
 houseCtrl = function ($scope, $route, $routeParams, $location){
-   alert("welcome ! " + $routeParams.houseId);
+    removeMsg();
+    if (getToken() == ""){
+        unknownCredential($scope, $location);
+        return false;
+    }else{
+        context.houseId = $routeParams.houseId;
+    }
+};
+
+occupantCtrl = function ($scope, $route, $routeParams, $location){
+    removeMsg();
+    if (getToken() == ""){
+        unknownCredential($scope, $location);
+        return false;
+    }else{
+        context.occupantId = $routeParams.occupantId;
+        showMsg("toto", "welcome "+$routeParams.occupantId);
+    }
 }
 
 msgCtrl = function ($scope){
@@ -137,7 +165,7 @@ msgCtrl = function ($scope){
         $scope.msgText = args.message;
         $scope.msgTitle = args.title;
     });
-}
+};
 
 /*****
  [NETW]
@@ -151,6 +179,7 @@ signin = function (houseName, housePassword, $scope, $location){
             setToken(request.getResponseHeader("X-AuthKey"));
             context.houseId = data.id;
             changePage('/H'+data.id, $scope, $location);
+            $scope.$apply();
         },
         {
             404: function() {
@@ -159,8 +188,8 @@ signin = function (houseName, housePassword, $scope, $location){
                     signup(houseName, housePassword, $scope, $location);
                 }
             },
-            403: function() {
-                logError("Unknown Credentials");
+            403: function(){
+                unknownCredential($scope, $location)
             }
         }
     )
@@ -173,7 +202,51 @@ signup = function (houseName, housePassword, $scope, $location){
         function(data, textStatus, request) {
             setToken(request.getResponseHeader("X-AuthKey"));
             context.houseId = data.id;
-            changePage(pageHouse+paramSeparator+data.id, $scope, $location);
+            changePage(pageHouse+paramSeparator+context.houseId, $scope, $location);
+            $scope.$apply();
+        },
+        {
+            403: function(){
+                unknownCredential($scope, $location)
+            }
+        }
+    )
+};
+
+addOccupant = function (occupantName, occupantPassword, $scope, $location){
+    postJsonWithToken(
+        HOUSE_URL+context.houseId+"/occupant",
+        '{"name": "'+occupantName+'", "password": "'+occupantPassword+'"}',
+        function(data, textStatus, request) {
+            setToken(request.getResponseHeader("X-AuthKey"));
+            loadOccupants($scope, $location);
+        },
+        {
+            404: function() {
+                logError("Unknown House");
+            },
+            403: function(){
+                unknownCredential($scope, $location)
+            }
+        }
+    )
+};
+
+loadOccupants = function ($scope, $location){
+    getJsonWithToken(
+        HOUSE_URL+context.houseId+"/occupants",
+        function(data, textStatus, request) {
+            setToken(request.getResponseHeader("X-AuthKey"));
+            $scope.occupants = data;
+            $scope.$apply();
+        },
+        {
+            404: function() {
+                logError("unknown house");
+            },
+            403: function(){
+                unknownCredential($scope, $location)
+            }
         }
     )
 };
@@ -194,10 +267,15 @@ var pageLogin = "L";
 var pageHouse = "H";
 var pageOccupant = "O";
 
+unknownCredential = function($scope, $location) {
+    changePage("/", $scope, $location);
+    logError("Unknown Credentials");
+}
+
 changePage = function(page, $scope, $location){
     $location.path(page);
-    $scope.$apply();
-}
+    //$scope.$apply();
+};
 
 angular.module('houseDuties', [], function($routeProvider, $locationProvider) {
     $routeProvider.when('/', {
@@ -207,6 +285,10 @@ angular.module('houseDuties', [], function($routeProvider, $locationProvider) {
     $routeProvider.when('/H:houseId', {
         templateUrl: 'house.html',
         controller: houseCtrl
+    });
+    $routeProvider.when('/H:houseId/O:occupantId', {
+        templateUrl: 'occupant.html',
+        controller: occupantCtrl
     });
     $routeProvider.otherwise({redirectTo:'/'});
 });

@@ -1,10 +1,17 @@
-<ul ng-controller="occupantCtrl">
-    <li ng-repeat="occupant in occupants">
-        {{occupant.name}} ({{occupant.id}})
-    </li>
-</ul>
-<form class="form-signin" ng-controller="addOccupantCtrl">
-    <input id="occupantName" class="input-block-level" ng-model="houseName" placeholder="Occupant Name" type="text"/>
-    <input id="occupantPassword" class="input-block-level" ng-model="housePassword" type="password" placeholder="Password"/>
-    <p><a id="addOccupant" href="#" class="button">Add</a></p>
-</form>
+
+<div ng-controller="occupantListCtrl">
+    <ul>
+        <li ng-repeat="occupant in occupants">
+            <a ng-click="showOccupant(occupant.key.id)">{{occupant.name}}</a> ({{occupant.key.id}})
+            <button type="button" class="btn btn-danger" data-toggle="collapse" data-target="#O{{occupant.key.id}}T">
+                Show Tasks
+            </button>
+            <div id="O{{occupant.key.id}}T" class="collapse">Tasks for #O{{occupant.key.id}}T</div>
+        </li>
+    </ul>
+    <form name="addOccupantForm" ng-submit="clickAddOccupant()">
+        <input id="occupantName" class="input-block-level" ng-model="occupantName" placeholder="Occupant Name" type="text"/>
+        <input id="occupantPassword" class="input-block-level" ng-model="occupantPassword" type="password" placeholder="Password"/>
+        <button class="btn btn-large btn-primary" type="submit"><i class="icon-plus"></i> Add Occupant</button>
+    </form>
+</div>
