@@ -1,10 +1,14 @@
 
 <div ng-controller="occupantListCtrl">
 
+        <button ng-click="showOccupantLadder()" tooltip="Show Ladder"><i class="icon-signal"></i></button>
+        <button ng-click="openAddOccupantModal()" tooltip="Add New Occupant"><i class="icon-plus"></i><i class="icon-user"></i></button>
+
         <div ng-repeat="occupant in occupants">
                 <a ng-click="showOccupant(occupant.key.id)">{{ occupant.name }}</a> ({{ occupant.points }})
-                <button type="button" class="btn" ng-click="isCollapse = !isCollapse;showOccupantTasks(occupant.key.id, isCollapse)">Show Tasks</button>
-                <button type="button" class="btn" ng-click="openAddTasksModal(occupant)">Add Tasks</button>
+                <button type="button" class="btn" ng-click="isCollapse = !isCollapse;showOccupantTasks(occupant.key.id, isCollapse)"><i class="icon-eye-open"></i><i class="icon-tasks"></i></button>
+                <button type="button" class="btn" ng-click="openAddTasksModal(occupant)" tooltip="Add Tasks"><i class="icon-plus"></i><i class="icon-tasks"></i></button>
+                <button type="button" class="btn btn-danger" ng-click="clickRemoveOccupant(occupant)" tooltip="Remove Occupant"><i class="icon-remove"></i></button>
                 <div collapse="!isCollapse" id="O{{ occupant.key.id }}T">
                     <ul>
                         <li ng-repeat="task in occupantTasks[occupant.key.id]">
@@ -14,7 +18,7 @@
                 </div>
         </div>
 
-    <div id="addTasks" modal="addTasksModal" close="closeAddTasksModal()" options="optsAddTasksModal">
+    <div id="addTasks" modal="addTasksModal" close="closeAddTasksModal()" options="optsModal">
         <div class="modal-header">
             <h3>Choose a Task for {{ occupant.name }}</h3>
         </div>
@@ -30,9 +34,19 @@
         </div>
     </div>
 
-    <form name="addOccupantForm" ng-submit="clickAddOccupant()">
-        <input id="occupantName" class="input-block-level" ng-model="occupantName" placeholder="Occupant Name" type="text"/>
-        <input id="occupantPassword" class="input-block-level" ng-model="occupantPassword" type="password" placeholder="Password"/>
-        <button class="btn btn-large btn-primary" type="submit"><i class="icon-plus"></i> Add Occupant</button>
-    </form>
+    <div id="addOccupant" modal="addOccupantModal" close="closeAddOccupantModal()" options="optsModal">
+        <div class="modal-header">
+            <h3>Add an occupant</h3>
+        </div>
+        <div class="modal-body">
+            <form name="addOccupantForm" class="form-signin" ng-submit="clickAddOccupant()">
+                <input id="occupantName" class="input-block-level" ng-model="occupantName" placeholder="Occupant Name" type="text"/>
+                <input id="occupantPassword" class="input-block-level" ng-model="occupantPassword" type="password" placeholder="Password"/>
+                <button class="btn btn-large btn-primary" type="submit"><i class="icon-plus"></i> Add Occupant</button>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-warning cancel" ng-click="closeAddOccupantModal()">Cancel</button>
+        </div>
+    </div>
 </div>

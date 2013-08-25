@@ -109,7 +109,7 @@ public class HouseOccupantRESTService extends RESTService{
 
 				pm.deletePersistent(occupantToDelete);
 
-				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).build();
+				return Response.status(200).entity("{}").header(AUTH_KEY_HEADER, renewToken(token)).build();
 			}else{
 				return Response.status(403).build();
 			}

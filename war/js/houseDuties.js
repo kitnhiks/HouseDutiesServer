@@ -106,12 +106,35 @@ getJsonWithToken = function(url, callback, statusCode){
     });
 };
 
+deleteWithToken = function(url, callback, statusCode){
+    startWait();
+    $.ajax({
+        url: url,
+        type: "DELETE",
+        dataType: "json",
+        success: callback,
+        error: function(request, textStatus, errorThrown){
+            logDebug(textStatus+" : "+errorThrown);
+        },
+        complete: function(){
+            stopWait();
+        },
+        statusCode : statusCode,
+        headers : {"X-AuthKey":getToken()}
+    });
+};
+
 setToken = function(value){
     token = value;
 };
 
 getToken = function(){
     return token;
+};
+
+optsModal = {
+        backdropFade: true,
+        dialogFade:true
 };
 
 /*****
@@ -135,12 +158,20 @@ houseCtrl = function ($scope, $route, $routeParams, $location){
 };
 
 occupantListCtrl= function ($scope, $route, $routeParams, $location){
+    // TODO : Handle caching
     $scope.occupantTasks = {};
 
     $scope.clickAddOccupant = function(){
         addOccupant($scope.occupantName, $scope.occupantPassword, $scope, $location);
         $scope.occupantName = "";
         $scope.occupantPassword = "";
+        $scope.addOccupantModal = false;
+    };
+    $scope.clickRemoveOccupant = function(occupant){
+        var saisie = confirm("Do you really want to remove this occupant ?");
+        if (saisie) {
+            removeOccupant(occupant.key.id, $scope, $location);
+        }
     };
     $scope.showOccupant = function(occupantId){
         openHouseOccupant(context.houseId, occupantId, $scope, $location);
@@ -154,18 +185,19 @@ occupantListCtrl= function ($scope, $route, $routeParams, $location){
         $scope.occupant = occupant;
         $scope.addTasksModal = true;
     };
-
     $scope.closeAddTasksModal = function (task, occupant) {
         if (typeof(task) != 'undefined' || typeof(occupant) != 'undefined'){
             addTaskToOccupant(task, occupant.key.id, $scope, $location);
         }
         $scope.addTasksModal = false;
     };
-
-    $scope.optsAddTasksModal = {
-        backdropFade: true,
-        dialogFade:true
+    $scope.openAddOccupantModal = function () {
+        $scope.addOccupantModal = true;
     };
+    $scope.closeAddOccupantModal = function () {
+        $scope.addOccupantModal = false;
+    };
+    $scope.optsModal = optsModal;
 
     if (getToken() == ""){
         unknownCredential($scope, $location);
@@ -257,7 +289,25 @@ addOccupant = function (occupantName, occupantPassword, $scope, $location){
         },
         {
             404: function() {
-                logError("Unknown House");
+                logError("Unknown Occupant");
+            },
+            403: function(){
+                unknownCredential($scope, $location)
+            }
+        }
+    )
+};
+
+removeOccupant = function (occupantId, $scope, $location){
+    deleteWithToken(
+        HOUSE_URL+context.houseId+"/occupant/"+occupantId,
+        function(data, textStatus, request) {
+            setToken(request.getResponseHeader("X-AuthKey"));
+            loadOccupants($scope, $location);
+        },
+        {
+            404: function() {
+                logError("Unknown Occupant");
             },
             403: function(){
                 unknownCredential($scope, $location)
@@ -276,7 +326,7 @@ loadOccupants = function ($scope, $location){
         },
         {
             404: function() {
-                logError("unknown house");
+                logError("Unknown House");
             },
             403: function(){
                 unknownCredential($scope, $location)
@@ -294,9 +344,6 @@ loadAllTasks = function ($scope, $location){
             $scope.$apply();
         },
         {
-            404: function() {
-                logError("unknown house");
-            },
             403: function(){
                 unknownCredential($scope, $location)
             }
@@ -314,7 +361,7 @@ addTaskToOccupant = function (task, occupantId, $scope, $location){
         },
         {
             404: function() {
-                logError("Unknown House");
+                logError("Unknown Occupant");
             },
             403: function(){
                 unknownCredential($scope, $location)
@@ -333,7 +380,7 @@ loadOccupantTasks = function (occupantId, $scope, $location){
         },
         {
             404: function() {
-                logError("unknown house");
+                logError("Unknown Occupant");
             },
             403: function(){
                 unknownCredential($scope, $location)
