@@ -1,14 +1,35 @@
 
 <div ng-controller="occupantListCtrl">
-    <ul>
-        <li ng-repeat="occupant in occupants">
-            <a ng-click="showOccupant(occupant.key.id)">{{occupant.name}}</a> ({{occupant.key.id}})
-            <button type="button" class="btn btn-danger" data-toggle="collapse" data-target="#O{{occupant.key.id}}T">
-                Show Tasks
-            </button>
-            <div id="O{{occupant.key.id}}T" class="collapse">Tasks for #O{{occupant.key.id}}T</div>
-        </li>
-    </ul>
+
+        <div ng-repeat="occupant in occupants">
+                <a ng-click="showOccupant(occupant.key.id)">{{ occupant.name }}</a> ({{ occupant.points }})
+                <button type="button" class="btn" ng-click="isCollapse = !isCollapse;showOccupantTasks(occupant.key.id, isCollapse)">Show Tasks</button>
+                <button type="button" class="btn" ng-click="openAddTasksModal(occupant)">Add Tasks</button>
+                <div collapse="!isCollapse" id="O{{ occupant.key.id }}T">
+                    <ul>
+                        <li ng-repeat="task in occupantTasks[occupant.key.id]">
+                            {{ task.name }}
+                        </li>
+                    </ul>
+                </div>
+        </div>
+
+    <div id="addTasks" modal="addTasksModal" close="closeAddTasksModal()" options="optsAddTasksModal">
+        <div class="modal-header">
+            <h3>Choose a Task for {{ occupant.name }}</h3>
+        </div>
+        <div class="modal-body" ng-controller="allTasksCtrl">
+            <ul>
+                <li ng-repeat="task in allTasks">
+                    <button class="btn" ng-click="closeAddTasksModal(task, occupant)">{{ task.name }}</button>
+                </li>
+            </ul>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-warning cancel" ng-click="closeAddTasksModal()">Cancel</button>
+        </div>
+    </div>
+
     <form name="addOccupantForm" ng-submit="clickAddOccupant()">
         <input id="occupantName" class="input-block-level" ng-model="occupantName" placeholder="Occupant Name" type="text"/>
         <input id="occupantPassword" class="input-block-level" ng-model="occupantPassword" type="password" placeholder="Password"/>

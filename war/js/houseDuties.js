@@ -54,7 +54,7 @@ showHelp('<p>HouseDuties <strong>helps you deal</strong> with all these <strong>
 
 removeMsg = function(){
     $("#msg").html('');
-}
+};
 
 startWait = function (){
     //TODO : Throbber ?
@@ -118,23 +118,10 @@ getToken = function(){
  [CTRL]
  ******/
 
-occupantListCtrl= function ($scope, $route, $routeParams, $location){
-    $scope.clickAddOccupant = function(){
-        addOccupant($scope.occupantName, $scope.occupantPassword, $scope, $location);
-        return false;
-    };
-    $scope.showOccupant = function(occupantId){
-        changePage('/H'+context.houseId+'/O'+occupantId, $scope, $location);
-        return false;
-    };
-    loadOccupants($scope,$location);
-};
-
 loginCtrl = function ($scope, $route, $routeParams, $location){
     removeMsg();
     $scope.clickSignin = function(){
         signin($scope.houseName, $scope.housePassword, $scope, $location);
-        return false;
     };
 };
 
@@ -142,9 +129,48 @@ houseCtrl = function ($scope, $route, $routeParams, $location){
     removeMsg();
     if (getToken() == ""){
         unknownCredential($scope, $location);
-        return false;
     }else{
         context.houseId = $routeParams.houseId;
+    }
+};
+
+occupantListCtrl= function ($scope, $route, $routeParams, $location){
+    $scope.occupantTasks = {};
+
+    $scope.clickAddOccupant = function(){
+        addOccupant($scope.occupantName, $scope.occupantPassword, $scope, $location);
+        $scope.occupantName = "";
+        $scope.occupantPassword = "";
+    };
+    $scope.showOccupant = function(occupantId){
+        openHouseOccupant(context.houseId, occupantId, $scope, $location);
+    };
+    $scope.showOccupantTasks = function(occupantId, isCollapse){
+        if (isCollapse){
+            loadOccupantTasks(occupantId, $scope, $location);
+        }
+    };
+    $scope.openAddTasksModal = function (occupant) {
+        $scope.occupant = occupant;
+        $scope.addTasksModal = true;
+    };
+
+    $scope.closeAddTasksModal = function (task, occupant) {
+        if (typeof(task) != 'undefined' || typeof(occupant) != 'undefined'){
+            addTaskToOccupant(task, occupant.key.id, $scope, $location);
+        }
+        $scope.addTasksModal = false;
+    };
+
+    $scope.optsAddTasksModal = {
+        backdropFade: true,
+        dialogFade:true
+    };
+
+    if (getToken() == ""){
+        unknownCredential($scope, $location);
+    }else{
+        loadOccupants($scope,$location);
     }
 };
 
@@ -152,12 +178,20 @@ occupantCtrl = function ($scope, $route, $routeParams, $location){
     removeMsg();
     if (getToken() == ""){
         unknownCredential($scope, $location);
-        return false;
     }else{
         context.occupantId = $routeParams.occupantId;
         showMsg("toto", "welcome "+$routeParams.occupantId);
     }
-}
+};
+
+allTasksCtrl = function ($scope, $route, $routeParams, $location){
+    if (getToken() == ""){
+        unknownCredential($scope, $location);
+    }else{
+        loadAllTasks($scope,$location);
+    }
+};
+
 
 msgCtrl = function ($scope){
     $scope.$on('msgShow', function(event, args) {
@@ -178,7 +212,7 @@ signin = function (houseName, housePassword, $scope, $location){
         function(data, textStatus, request) {
             setToken(request.getResponseHeader("X-AuthKey"));
             context.houseId = data.id;
-            changePage('/H'+data.id, $scope, $location);
+            openHouse(context.houseId, $scope, $location);
             $scope.$apply();
         },
         {
@@ -202,7 +236,7 @@ signup = function (houseName, housePassword, $scope, $location){
         function(data, textStatus, request) {
             setToken(request.getResponseHeader("X-AuthKey"));
             context.houseId = data.id;
-            changePage(pageHouse+paramSeparator+context.houseId, $scope, $location);
+            openHouse(context.houseId, $scope, $location);
             $scope.$apply();
         },
         {
@@ -251,6 +285,64 @@ loadOccupants = function ($scope, $location){
     )
 };
 
+loadAllTasks = function ($scope, $location){
+    getJsonWithToken(
+        TASKS_URL,
+        function(data, textStatus, request) {
+            setToken(request.getResponseHeader("X-AuthKey"));
+            $scope.allTasks = data;
+            $scope.$apply();
+        },
+        {
+            404: function() {
+                logError("unknown house");
+            },
+            403: function(){
+                unknownCredential($scope, $location)
+            }
+        }
+    )
+};
+
+addTaskToOccupant = function (task, occupantId, $scope, $location){
+    postJsonWithToken(
+        HOUSE_URL+context.houseId+"/occupant/"+occupantId+"/task/",
+        '{"categoryKey":"'+task.categoryKey+'", "name":"'+task.name+'", "points":"'+task.points+'"}',
+        function(data, textStatus, request) {
+            setToken(request.getResponseHeader("X-AuthKey"));
+            loadOccupants ($scope, $location);
+        },
+        {
+            404: function() {
+                logError("Unknown House");
+            },
+            403: function(){
+                unknownCredential($scope, $location)
+            }
+        }
+    )
+};
+
+loadOccupantTasks = function (occupantId, $scope, $location){
+    getJsonWithToken(
+        HOUSE_URL+context.houseId+"/occupant/"+occupantId+"/tasks",
+        function(data, textStatus, request) {
+            setToken(request.getResponseHeader("X-AuthKey"));
+            $scope.occupantTasks[occupantId] = data;
+            $scope.$apply();
+        },
+        {
+            404: function() {
+                logError("unknown house");
+            },
+            403: function(){
+                unknownCredential($scope, $location)
+            }
+        }
+    )
+};
+
+
 /*****
  [PAGE]
  ******/
@@ -263,12 +355,12 @@ loadOccupants = function ($scope, $location){
 //  |- Tasks
 
 var page = "p";
-var pageLogin = "L";
-var pageHouse = "H";
-var pageOccupant = "O";
+var pageLogin = "/";
+var pageHouse = "/H";
+var pageOccupant = "/O";
 
 unknownCredential = function($scope, $location) {
-    changePage("/", $scope, $location);
+    changePage(pageLogin, $scope, $location);
     logError("Unknown Credentials");
 }
 
@@ -277,18 +369,26 @@ changePage = function(page, $scope, $location){
     //$scope.$apply();
 };
 
-angular.module('houseDuties', [], function($routeProvider, $locationProvider) {
-    $routeProvider.when('/', {
+openHouse = function(houseId, $scope, $location){
+    changePage(pageHouse+houseId, $scope, $location);
+};
+
+openHouseOccupant = function(houseId, occupantId, $scope, $location){
+    changePage(pageHouse+houseId+pageOccupant+occupantId, $scope, $location);
+};
+
+angular.module('houseDuties', ['ui.bootstrap'], function($routeProvider, $locationProvider) {
+    $routeProvider.when(pageLogin, {
         templateUrl: 'login.html',
         controller: loginCtrl
     });
-    $routeProvider.when('/H:houseId', {
+    $routeProvider.when(pageHouse+':houseId', {
         templateUrl: 'house.html',
         controller: houseCtrl
     });
-    $routeProvider.when('/H:houseId/O:occupantId', {
+    $routeProvider.when(pageHouse+':houseId'+pageOccupant+':occupantId', {
         templateUrl: 'occupant.html',
         controller: occupantCtrl
     });
-    $routeProvider.otherwise({redirectTo:'/'});
+    $routeProvider.otherwise({redirectTo:pageLogin});
 });

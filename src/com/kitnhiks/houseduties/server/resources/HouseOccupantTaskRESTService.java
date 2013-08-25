@@ -5,6 +5,7 @@ import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.getToken;
 import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isValidToken;
 import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.renewToken;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.jdo.JDOObjectNotFoundException;
@@ -44,22 +45,24 @@ public class HouseOccupantTaskRESTService extends RESTService{
 			@PathParam("houseId") Long houseId, //
 			@PathParam("occupantId") Long occupantId)
 	{
+		PersistenceManager pm = pmfInstance.getPersistenceManager();
 		try {
-			PersistenceManager pm = pmfInstance.getPersistenceManager();
 			House house = pm.getObjectById(House.class, houseId);
 			String token = getToken(headers);
 			if (isValidToken(token, house)){
 				task.setKey(null);
 
 				Occupant occupant;
+
 				Key houseKey = KeyFactory.createKey(House.class.getSimpleName(), houseId);
 				Key occupantKey = KeyFactory.createKey(houseKey, Occupant.class.getSimpleName(), occupantId);
 				occupant = pm.getObjectById(Occupant.class, occupantKey);
-
-				pm.makePersistent(task);
+				logger.log(Level.SEVERE, "caca : "+occupant.getName());
+				logger.log(Level.SEVERE, "caca 2: "+occupant.getPoints());
 				occupant.addTask(task);
+				occupant.setPoints(occupant.getPoints() + task.getPoints());
+				logger.log(Level.SEVERE, "caca 3: "+occupant.getPoints());
 				pm.makePersistent(occupant);
-
 				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity("{\"id\":\""+task.getKey().getId()+"\"}").build();
 			}else{
 				return Response.status(403).build();
@@ -68,7 +71,10 @@ public class HouseOccupantTaskRESTService extends RESTService{
 			return Response.status(404).build();
 		}catch(Exception e){
 			return serverErrorResponse("adding task to occupant "+occupantId+" (@ "+houseId+")", e);
+		} finally {
+			pm.close();
 		}
+
 	}
 
 	@GET
