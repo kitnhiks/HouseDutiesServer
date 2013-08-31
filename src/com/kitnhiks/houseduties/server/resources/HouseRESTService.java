@@ -132,7 +132,7 @@ public class HouseRESTService extends RESTService{
 			if (isValidToken(token, houseToDelete)){
 				pm.deletePersistent(houseToDelete);
 
-				return Response.ok().build();
+				return Response.status(200).entity("{}").build();
 			}else{
 				return Response.status(403).build();
 			}
