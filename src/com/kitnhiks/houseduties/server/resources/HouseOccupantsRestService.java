@@ -6,6 +6,8 @@ import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.isValidToken;
 import static com.kitnhiks.houseduties.server.utils.AuthTokenizer.renewToken;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.logging.Logger;
 
 import javax.jdo.JDOObjectNotFoundException;
@@ -47,6 +49,46 @@ public class HouseOccupantsRESTService extends RESTService{
 					occupants.add(pm.detachCopy(pm.getObjectById(Occupant.class, occupant.getKey())));
 				}
 
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity(occupants).build();
+			}else{
+				return Response.status(403).build();
+			}
+		} catch (JDOObjectNotFoundException e){
+			return Response.status(404).build();
+		}catch(Exception e){
+			return serverErrorResponse("retrieving occupants from house "+houseId, e);
+		}
+	}
+
+	@GET
+	@Path("/ladder")
+	@Produces("application/json")
+	public Response getOccupantsLadder(//
+			@Context HttpHeaders headers, //
+			@PathParam("houseId") Long houseId) {
+		try{
+			PersistenceManager pm = pmfInstance.getPersistenceManager();
+			House house = pm.getObjectById(House.class, houseId);
+			String token = getToken(headers);
+
+			if (isValidToken(token, house)){
+				ArrayList<Occupant> occupants = new ArrayList<Occupant>();
+
+				for(Occupant occupant : house.getOccupants()){
+					occupants.add(pm.detachCopy(pm.getObjectById(Occupant.class, occupant.getKey())));
+				}
+
+				Collections.sort(occupants, new Comparator<Occupant>(){
+					@Override
+					public int compare(Occupant firstOccupant, Occupant secondOccupant) {
+						if (firstOccupant.getPoints() == secondOccupant.getPoints()){
+							return 0;
+						}else if (firstOccupant.getPoints() > secondOccupant.getPoints()){
+							return -1;
+						}else{
+							return 1;
+						}
+					}});
 				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity(occupants).build();
 			}else{
 				return Response.status(403).build();
