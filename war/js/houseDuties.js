@@ -173,6 +173,9 @@ occupantListCtrl= function ($scope, $route, $routeParams, $location){
             removeOccupant(occupant.key.id, $scope, $location);
         }
     };
+    $scope.showOccupantLadder = function(){
+        openHouseLadder(context.houseId, $scope, $location);
+    }
     $scope.showOccupant = function(occupantId){
         openHouseOccupant(context.houseId, occupantId, $scope, $location);
     };
@@ -212,7 +215,7 @@ occupantCtrl = function ($scope, $route, $routeParams, $location){
         unknownCredential($scope, $location);
     }else{
         context.occupantId = $routeParams.occupantId;
-        showMsg("toto", "welcome "+$routeParams.occupantId);
+        logInfo("welcome "+$routeParams.occupantId);
     }
 };
 
@@ -232,6 +235,14 @@ msgCtrl = function ($scope){
         $scope.msgTitle = args.title;
     });
 };
+
+ladderCtrl = function ($scope, $route, $routeParams, $location){
+    if (getToken() == ""){
+        unknownCredential($scope, $location);
+    }else{
+        loadOccupantsLadder($scope,$location);
+    }
+}
 
 /*****
  [NETW]
@@ -389,6 +400,24 @@ loadOccupantTasks = function (occupantId, $scope, $location){
     )
 };
 
+loadOccupantsLadder = function ($scope, $location){
+    getJsonWithToken(
+        HOUSE_URL+context.houseId+"/occupants/ladder",
+        function(data, textStatus, request) {
+            setToken(request.getResponseHeader("X-AuthKey"));
+            $scope.occupants = data;
+            $scope.$apply();
+        },
+        {
+            404: function() {
+                logError("Unknown House");
+            },
+            403: function(){
+                unknownCredential($scope, $location)
+            }
+        }
+    )
+};
 
 /*****
  [PAGE]
@@ -405,6 +434,7 @@ var page = "p";
 var pageLogin = "/";
 var pageHouse = "/H";
 var pageOccupant = "/O";
+var pageLadder = "/L";
 
 unknownCredential = function($scope, $location) {
     changePage(pageLogin, $scope, $location);
@@ -418,6 +448,10 @@ changePage = function(page, $scope, $location){
 
 openHouse = function(houseId, $scope, $location){
     changePage(pageHouse+houseId, $scope, $location);
+};
+
+openHouseLadder = function(houseId, $scope, $location){
+    changePage(pageHouse+houseId+pageLadder, $scope, $location);
 };
 
 openHouseOccupant = function(houseId, occupantId, $scope, $location){
@@ -436,6 +470,10 @@ angular.module('houseDuties', ['ui.bootstrap'], function($routeProvider, $locati
     $routeProvider.when(pageHouse+':houseId'+pageOccupant+':occupantId', {
         templateUrl: 'occupant.html',
         controller: occupantCtrl
+    });
+    $routeProvider.when(pageHouse+':houseId'+pageLadder, {
+        templateUrl: 'ladder.html',
+        controller: ladderCtrl
     });
     $routeProvider.otherwise({redirectTo:pageLogin});
 });

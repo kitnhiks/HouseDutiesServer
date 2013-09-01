@@ -33,7 +33,9 @@ body{
     padding: 7px 9px;
 }
 
-
+.ladderWinner{
+    font-weight: bold;
+}
 
 /* Landscape phones and down */
 @media screen and (max-width: 480px) {
