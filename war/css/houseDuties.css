@@ -8,7 +8,30 @@
 }
 
 body{
+    height:100%;
+    margin:0;
+    padding:0;
+}
 
+.overlay {
+    visibility: hidden;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right:0;
+    bottom:0;
+    z-index: 2000;
+    background-color: #000000;
+    opacity: 0.8;
+    filter: alpha(opacity=80);
+}
+
+#throbber div {
+    position: fixed;
+    top:50%;
+    left:50%;
+    margin-top: -12px;
+    margin-left: -12px;
 }
 
 .min-size{

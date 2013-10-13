@@ -13,7 +13,7 @@
  [CONF]
  ******/
 
-var BASE_URL = "http://localhost:8888/";
+var BASE_URL = "";
 var HOUSE_URL = BASE_URL+"house/";
 var LOGIN_URL = HOUSE_URL+"login/";
 var TASKS_URL = BASE_URL+"tasks/";
@@ -57,11 +57,11 @@ removeMsg = function(){
 };
 
 startWait = function (){
-    //TODO : Throbber ?
+    document.getElementById("throbber").style.visibility = "visible";
 };
 
 stopWait = function (){
-    //TODO : Throbber ?
+    document.getElementById("throbber").style.visibility = "hidden";
 };
 
 postJson = function (url, data, callback, statusCode, headers){
