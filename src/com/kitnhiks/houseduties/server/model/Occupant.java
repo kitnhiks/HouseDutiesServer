@@ -38,6 +38,12 @@ public class Occupant implements Serializable {
 
 	}
 
+	public Occupant(Occupant occupant) {
+		this.name = occupant.name;
+		this.password = occupant.password;
+		this.email = occupant.email;
+	}
+
 
 	/**
 	 * @return the key

@@ -45,12 +45,12 @@ public class HouseOccupantRESTService extends RESTService{
 			House house = pm.getObjectById(House.class, houseId);
 			String token = getToken(headers);
 			if (isValidToken(token, house)){
-				occupant.setKey(null);
+				Occupant newOccupant = new Occupant(occupant);
 
-				house.addOccupant(occupant);
+				house.addOccupant(newOccupant);
 				pm.makePersistent(house);
 
-				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity("{\"id\":\""+occupant.getKey().getId()+"\"}").build();
+				return Response.status(200).header(AUTH_KEY_HEADER, renewToken(token)).entity("{\"id\":\""+newOccupant.getKey().getId()+"\"}").build();
 			}else{
 				return Response.status(403).build();
 			}
